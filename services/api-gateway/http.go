@@ -9,6 +9,7 @@ import (
 )
 
 func handleTripPreview(w http.ResponseWriter, r *http.Request) {
+
 	var requestBody previewTripRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
