@@ -21,7 +21,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /trip/preview", handleTripPreview)
+	// HTTP and WebSocket routes (explicit methods for Go 1.22+ patterns)
+	mux.HandleFunc("POST /trip/preview", enableCORS(handleTripPreview))
+	mux.HandleFunc("GET /ws/drivers", handleDriverWebSocket)
+	mux.HandleFunc("GET /ws/riders", handleRiderWebSocket)
 
 	server := &http.Server{
 		Addr:    httpAddr,

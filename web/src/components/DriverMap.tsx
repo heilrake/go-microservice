@@ -18,6 +18,8 @@ const START_LOCATION: Coordinate = {
   longitude: -122.4194,
 }
 
+
+
 const driverMarker = new L.Icon({
   iconUrl: "https://www.svgrepo.com/show/25407/car.svg",
   iconSize: [30, 30],

@@ -37,10 +37,9 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
     const mapRef = useRef<L.Map>(null)
     const userID = useMemo(() => crypto.randomUUID(), [])
     const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
     const location = {
-        latitude: 37.7749,
-        longitude: -122.4194,
+        latitude: 49.438280,
+        longitude: 32.060711,
     };
 
     const {
