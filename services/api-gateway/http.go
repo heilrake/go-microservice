@@ -1,15 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	grpc_client "ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
 )
 
 func handleTripPreview(w http.ResponseWriter, r *http.Request) {
-
 	var requestBody previewTripRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
@@ -17,31 +17,52 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonBody, _ := json.Marshal(requestBody)
-	reader := bytes.NewBuffer(jsonBody)
-
-	resp, err := http.Post("http://trip-service:8083/preview", "application/json", reader)
+	tripService, err := grpc_client.NewTripServiceClient()
 	if err != nil {
-		http.Error(w, "failed call trip service ", http.StatusBadRequest)
-		return
+		log.Fatal(err)
 	}
 
-	defer resp.Body.Close()
+	defer tripService.Close()
 
-	var respBody any
-	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+	tripPreview, err := tripService.Client.PreviewTrip(r.Context(), requestBody.toProto())
+	if err != nil {
+		log.Printf("Failed to preview a trip: %v", err)
+		http.Error(w, "Failed to preview trip", http.StatusInternalServerError)
+	}
+
+	response := contracts.APIResponse{Data: tripPreview}
+
+	fmt.Printf("response %v\n", response)
+
+	writeJson(w, http.StatusCreated, response)
+}
+
+func handleTripStart(w http.ResponseWriter, r *http.Request) {
+	var requestBody startTripRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Printf("here\n")
+	tripService, err := grpc_client.NewTripServiceClient()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	response := contracts.APIResponse{Data: respBody}
+	defer tripService.Close()
+
+	tripStart, err := tripService.Client.CreateTrip(r.Context(), requestBody.toProto())
+	if err != nil {
+		log.Printf("Failed to start a trip: %v", err)
+		http.Error(w, "Failed to start trip", http.StatusInternalServerError)
+	}
+
+	response := contracts.APIResponse{Data: tripStart}
 
 	fmt.Printf("response %v\n", response)
 
-	// surface downstream status code instead of always 200
-	writeJson(w, resp.StatusCode, response)
+	writeJson(w, http.StatusCreated, response)
 }
 
 func writeJson(w http.ResponseWriter, status int, data any) error {

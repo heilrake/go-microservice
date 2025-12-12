@@ -23,6 +23,7 @@ func main() {
 
 	// HTTP and WebSocket routes (explicit methods for Go 1.22+ patterns)
 	mux.HandleFunc("POST /trip/preview", enableCORS(handleTripPreview))
+	mux.HandleFunc("POST /trip/start", enableCORS(handleTripStart))
 	mux.HandleFunc("GET /ws/drivers", handleDriverWebSocket)
 	mux.HandleFunc("GET /ws/riders", handleRiderWebSocket)
 
