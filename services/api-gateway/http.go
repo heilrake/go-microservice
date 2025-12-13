@@ -28,6 +28,7 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Failed to preview a trip: %v", err)
 		http.Error(w, "Failed to preview trip", http.StatusInternalServerError)
+		return
 	}
 
 	response := contracts.APIResponse{Data: tripPreview}

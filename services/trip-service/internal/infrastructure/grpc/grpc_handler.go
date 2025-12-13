@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"log"
+	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/services/trip-service/internal/service"
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
@@ -46,9 +47,16 @@ func (h *gRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		return nil, status.Errorf(codes.Internal, "failed to get route: %v", err)
 	}
 
+	estimatedFares := h.service.EstimatePackagesPriceWithRoute(t)
+
+	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, req.GetUserID())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate the ride fares: %v", err)
+	}
+
 	return &pb.PreviewTripResponse{
 		Route:     t.ToProto(),
-		RideFares: []*pb.RideFare{},
+		RideFares: domain.ToRideFaresProto(fares),
 	}, nil
 }
 
