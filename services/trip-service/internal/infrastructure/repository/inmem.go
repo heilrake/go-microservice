@@ -15,6 +15,7 @@ type inmemRepository struct {
 type TripRepository interface {
 	CreateTrip(ctx context.Context, trip *domain.TripModel) (*domain.TripModel, error)
 	SaveRideFare(ctx context.Context, fare *domain.RideFareModel) error
+	GetRideFareByID(ctx context.Context, id string) (*domain.RideFareModel, error)
 }
 
 // NewInmemRepository creates a new in-memory repository instance.
@@ -35,4 +36,13 @@ func (r *inmemRepository) SaveRideFare(ctx context.Context, fare *domain.RideFar
 	r.rideFares[fare.ID] = fare
 
 	return nil
+}
+
+func (r *inmemRepository) GetRideFareByID(ctx context.Context, id string) (*domain.RideFareModel, error) {
+	fare, exists := r.rideFares[id]
+	if !exists {
+		return nil, nil
+	}
+
+	return fare, nil
 }

@@ -20,6 +20,7 @@ type TripService interface {
 	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error)
 	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel
 	GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error)
+	GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error)
 }
 
 type tripService struct {
@@ -31,6 +32,24 @@ func NewTripServer(r repository.TripRepository) TripService {
 	return &tripService{
 		repo: r,
 	}
+}
+
+func (s *tripService) GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error) {
+	fare, err := s.repo.GetRideFareByID(ctx, fareID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get trip fare: %w", err)
+	}
+
+	if fare == nil {
+		return nil, fmt.Errorf("fare does not exist")
+	}
+
+	// User fare validation (user is owner of this fare?)
+	if userID != fare.UserID {
+		return nil, fmt.Errorf("fare does not belong to the user")
+	}
+
+	return fare, nil
 }
 
 func (s *tripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error) {
