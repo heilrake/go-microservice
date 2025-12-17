@@ -1,0 +1,2 @@
+// docker build -t europe-central2-docker.pkg.dev/copy-email-468114/ride-sharing/api-gateway:latest --platform linux/amd64 -f infra/production/docker/api-gateway.Dockerfile .
+// docker build -t europe-central2-docker.pkg.dev/copy-email-468114/ride-sharing/trip-service:latest --platform linux/amd64 -f infra/production/docker/trip-service.Dockerfile .

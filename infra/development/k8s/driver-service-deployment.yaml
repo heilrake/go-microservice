@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trip-service
+  name: driver-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: trip-service
+      app: driver-service
   template:
     metadata:
       labels:
-        app: trip-service
+        app: driver-service
     spec:
       containers:
-        - name: trip-service
-          image: europe-central2-docker.pkg.dev/copy-email-468114/ride-sharing/trip-service:latest
+        - name: driver-service
+          image: driver-sharing/driver-service
           ports:
-            - containerPort: 8083
+            - containerPort: 9094
           resources:
             requests:
               memory: '64Mi'
@@ -24,17 +24,16 @@ spec:
             limits:
               memory: '128Mi'
               cpu: '200m'
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: trip-service
+  name: driver-service
 spec:
   selector:
-    app: trip-service
+    app: driver-service
   ports:
-    - port: 8083
-      name: http
-      targetPort: 8083
+    - port: 9094
+      name: grpc
+      targetPort: 9094
   type: ClusterIP

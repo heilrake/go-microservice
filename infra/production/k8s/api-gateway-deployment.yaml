@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: europe-west1-docker.pkg.dev/{{PROJECT_ID}}/ride-sharing/api-gateway
+          image: europe-central2-docker.pkg.dev/copy-email-468114/ride-sharing/api-gateway:latest
           ports:
             - containerPort: 8081
           env:
@@ -25,11 +25,11 @@ spec:
                   name: app-config
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "125m"
+              memory: '128Mi'
+              cpu: '125m'
             limits:
-              memory: "128Mi"
-              cpu: "125m"
+              memory: '128Mi'
+              cpu: '125m'
 ---
 apiVersion: v1
 kind: Service
