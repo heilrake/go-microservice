@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: driver-service
-          image: driver-sharing/driver-service
+          image: ride-sharing/driver-service
           ports:
             - containerPort: 9094
           resources:

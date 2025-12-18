@@ -41,21 +41,21 @@ func (h *gRPCHandler) PreviewTrip(ctx context.Context, req *pb.PreviewTripReques
 		Longitude: destination.Longitude,
 	}
 
-	t, err := h.service.GetRoute(ctx, pickupCoord, destinationCoord)
+	route, err := h.service.GetRoute(ctx, pickupCoord, destinationCoord)
 	if err != nil {
 		log.Println(err)
 		return nil, status.Errorf(codes.Internal, "failed to get route: %v", err)
 	}
 
-	estimatedFares := h.service.EstimatePackagesPriceWithRoute(t)
+	estimatedFares := h.service.EstimatePackagesPriceWithRoute(route)
 
-	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, req.GetUserID())
+	fares, err := h.service.GenerateTripFares(ctx, estimatedFares, req.GetUserID(), route)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate the ride fares: %v", err)
 	}
 
 	return &pb.PreviewTripResponse{
-		Route:     t.ToProto(),
+		Route:     route.ToProto(),
 		RideFares: domain.ToRideFaresProto(fares),
 	}, nil
 }

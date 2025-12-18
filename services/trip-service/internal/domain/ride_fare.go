@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"ride-sharing/services/trip-service/pkg/types"
 	pb "ride-sharing/shared/proto/trip"
 	"time"
 )
@@ -10,6 +11,7 @@ type RideFareModel struct {
 	UserID            string
 	PackageSlug       string // e.g., "standard", "premium"
 	TotalPriceInCents float64
+	Route             *types.OsrmApiResponse
 	ExpiresAt         time.Time
 }
 

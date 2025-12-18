@@ -3,6 +3,10 @@ load('ext://restart_process', 'docker_build_with_restart')
 
 ### K8s Config ###
 
+# Allow only development contexts (uncomment and modify if needed for production)
+# allow_k8s_contexts('gke_copy-email-468114_europe-central2_ride-sharing')
+# For development, switch to minikube: kubectl config use-context minikube
+
 # Uncomment to use secrets
 # k8s_yaml('./infra/development/k8s/secrets.yaml')
 
@@ -73,13 +77,13 @@ k8s_resource('trip-service', resource_deps=['trip-service-compile'], labels="ser
 
 ### Driver Service ###
 
-trip_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/driver-service ./services/driver-service/cmd/main.go'
+driver_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/driver-service ./services/driver-service/cmd/main.go'
 if os.name == 'nt':
- trip_compile_cmd = './infra/development/docker/driver-build.bat'
+ driver_compile_cmd = './infra/development/docker/driver-build.bat'
 
 local_resource(
-  'trip-driver-compile',
-  trip_compile_cmd,
+  'driver-service-compile',
+  driver_compile_cmd,
   deps=['./services/driver-service', './shared'], labels="compiles")
 
 docker_build_with_restart(

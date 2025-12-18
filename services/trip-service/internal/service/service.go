@@ -19,7 +19,7 @@ type TripService interface {
 	CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error)
 	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error)
 	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel
-	GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error)
+	GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*domain.RideFareModel, error)
 	GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error)
 }
 
@@ -100,7 +100,7 @@ func (s *tripService) EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiRes
 	return estimatedFares
 }
 
-func (s *tripService) GenerateTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+func (s *tripService) GenerateTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*domain.RideFareModel, error) {
 	fares := make([]*domain.RideFareModel, len(rideFares))
 
 	for i, f := range rideFares {
