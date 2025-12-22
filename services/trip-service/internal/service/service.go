@@ -110,6 +110,7 @@ func (s *tripService) GenerateTripFares(ctx context.Context, rideFares []*domain
 			ID:                uuid.NewString(),
 			TotalPriceInCents: f.TotalPriceInCents,
 			PackageSlug:       f.PackageSlug,
+			Route:             route,
 		}
 
 		if err := s.repo.SaveRideFare(ctx, fare); err != nil {

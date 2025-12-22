@@ -14,8 +14,8 @@ import { DriverCard } from "./DriverCard";
 import { TripEvents } from "../contracts";
 
 const START_LOCATION: Coordinate = {
-  latitude: 37.7749,
-  longitude: -122.4194,
+  latitude: 49.438280,
+  longitude: 32.060711,
 }
 
 

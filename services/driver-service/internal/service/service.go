@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	math "math/rand/v2"
 	pb "ride-sharing/shared/proto/driver"
@@ -19,6 +20,7 @@ type driverInMap struct {
 type DriverService interface {
 	RegisterDriver(driverID, packageSlug string) (*pb.Driver, error)
 	UnregisterDriver(driverID string) error
+	FindAvailableDrivers(ctx context.Context, packageType string) []string
 }
 
 type driverService struct {
@@ -77,3 +79,20 @@ func (s *driverService) UnregisterDriver(driverID string) error {
 
 	return fmt.Errorf("driver not found")
 }
+
+func (s *driverService) FindAvailableDrivers(ctx context.Context, packageType string) []string {
+	var matchingDrivers []string
+
+	for _, driver := range s.drivers {
+		if driver.Driver.PackageSlug == packageType {
+			matchingDrivers = append(matchingDrivers, driver.Driver.Id)
+		}
+	}
+
+	if len(matchingDrivers) == 0 {
+		return []string{}
+	}
+
+	return matchingDrivers
+}
+ 

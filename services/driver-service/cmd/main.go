@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"ride-sharing/services/driver-service/internal/events"
 	grpcHandler "ride-sharing/services/driver-service/internal/infrastructure/grpc"
 	"ride-sharing/services/driver-service/internal/service"
 	"ride-sharing/shared/env"
@@ -43,10 +44,19 @@ func main() {
 	}
 	defer rabbitmq.Close()
 
+	driverService := service.NewService()
+
 	log.Println("Starting RabbitMQ connection")
 
+	consumer := events.NewTripConsumer(rabbitmq, driverService)
+	go func() {
+		if err := consumer.Listen(); err != nil {
+			log.Fatalf("Failed to listen to the message: %v", err)
+		}
+	}()
+
 	// Create the service and register the gRPC handler
-	driverService := service.NewService()
+
 	grpcHandler.NewGrpcHandler(grpcServer, driverService)
 
 	log.Printf("Starting gRPC server Driver service on port %s", lis.Addr().String())
