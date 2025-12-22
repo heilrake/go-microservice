@@ -7,6 +7,8 @@ import (
 	"ride-sharing/services/driver-service/internal/service"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
+	"ride-sharing/shared/messaging/consumers"
+	tripPublishers "ride-sharing/shared/messaging/publishers"
 
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -24,7 +26,7 @@ func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service service.DriverService
 }
 
 func (c *tripConsumer) Listen() error {
-	return c.rabbitmq.ConsumeMessages("find_available_drivers", func(ctx context.Context, msg amqp091.Delivery) error {
+	return consumers.NewFindDriversConsumer(c.rabbitmq).Consume("find_available_drivers", func(ctx context.Context, msg amqp091.Delivery) error {
 		var tripEvent contracts.AmqpMessage
 		if err := json.Unmarshal(msg.Body, &tripEvent); err != nil {
 			log.Printf("Failed to unmarshal message: %v", err)
@@ -57,7 +59,7 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 
 	if len(suitableIDs) == 0 {
 		// Notify the driver that no drivers are available
-		if err := c.rabbitmq.PublishMessage(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
+		if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
 			OwnerID: payload.Trip.UserID,
 		}); err != nil {
 			log.Printf("Failed to publish message to exchange: %v", err)
@@ -75,7 +77,7 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 	}
 
 	// Notify the driver about a potential trip
-	if err := c.rabbitmq.PublishMessage(ctx, contracts.DriverCmdTripRequest, contracts.AmqpMessage{
+	if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.DriverCmdTripRequest, contracts.AmqpMessage{
 		OwnerID: suitableDriverID,
 		Data:    marshalledEvent,
 	}); err != nil {

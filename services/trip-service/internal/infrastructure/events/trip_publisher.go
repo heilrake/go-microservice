@@ -6,6 +6,7 @@ import (
 	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
+	tripPublishers "ride-sharing/shared/messaging/publishers"
 )
 
 type TripEventPublisher struct {
@@ -28,8 +29,9 @@ func (p *TripEventPublisher) PublishTripCreated(ctx context.Context, trip *domai
 		return err
 	}
 
-	return p.rabbitmq.PublishMessage(ctx, contracts.TripEventCreated, contracts.AmqpMessage{
+	return tripPublishers.NewTripPublisher(p.rabbitmq).Publish(ctx, contracts.TripEventCreated, contracts.AmqpMessage{
 		OwnerID: trip.UserID,
 		Data:    tripEventJSON,
 	})
+
 }
