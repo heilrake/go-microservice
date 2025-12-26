@@ -19,11 +19,11 @@ spec:
             - containerPort: 8081
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "125m"
+              memory: '128Mi'
+              cpu: '125m'
             limits:
-              memory: "128Mi"
-              cpu: "125m"
+              memory: '128Mi'
+              cpu: '125m'
           env:
             # Accessing an env variable from the app-config config map
             - name: GATEWAY_HTTP_ADDR
@@ -32,9 +32,14 @@ spec:
                   key: GATEWAY_HTTP_ADDR
                   name: app-config
             - name: TRIP_SERVICE_URL
-              value: "trip-service:9093"
+              value: 'trip-service:9093'
             - name: DRIVER_SERVICE_URL
-              value: "driver-service:9094"
+              value: 'driver-service:9094'
+            - name: RABBITMQ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: uri
 ---
 apiVersion: v1
 kind: Service

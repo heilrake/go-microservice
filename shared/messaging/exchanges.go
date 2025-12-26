@@ -1,6 +1,9 @@
 package messaging
 
-import "fmt"
+import (
+	"fmt"
+	"ride-sharing/shared/contracts"
+)
 
 const (
 	TripExchange = "trip"
@@ -28,6 +31,30 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		); err != nil {
 			return fmt.Errorf("failed to declare exchange %s: %w", ex.Name, err)
 		}
+	}
+
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   DriverCmdTripRequestQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.DriverCmdTripRequest},
+	}); err != nil {
+		return err
+	}
+
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   DriverTripResponseQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.DriverCmdTripAccept, contracts.DriverCmdTripDecline},
+	}); err != nil {
+		return err
+	}
+
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   NotifyDriverNoDriversFoundQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.TripEventNoDriversFound},
+	}); err != nil {
+		return err
 	}
 
 	return nil

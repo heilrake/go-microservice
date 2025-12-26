@@ -2,9 +2,15 @@ package messaging
 
 import "fmt"
 
-func (r *RabbitMQ) DeclareQueue(queueName string, exchange string, routingKeys []string) error {
+type QueueConfig struct {
+	QueueName   string
+	Exchanges   []string
+	RoutingKeys []string
+}
+
+func (r *RabbitMQ) DeclareQueue(config QueueConfig) error {
 	q, err := r.Channel.QueueDeclare(
-		queueName,
+		config.QueueName,
 		true,  // durable
 		false, // delete when unused
 		false, // exclusive
@@ -15,15 +21,17 @@ func (r *RabbitMQ) DeclareQueue(queueName string, exchange string, routingKeys [
 		return fmt.Errorf("queue declare failed: %w", err)
 	}
 
-	for _, key := range routingKeys {
-		if err := r.Channel.QueueBind(
-			q.Name,
-			key,
-			exchange,
-			false,
-			nil,
-		); err != nil {
-			return fmt.Errorf("queue bind failed: %w", err)
+	for _, exchange := range config.Exchanges {
+		for _, key := range config.RoutingKeys {
+			if err := r.Channel.QueueBind(
+				q.Name,
+				key,
+				exchange,
+				false,
+				nil,
+			); err != nil {
+				return fmt.Errorf("queue bind failed: %w", err)
+			}
 		}
 	}
 
