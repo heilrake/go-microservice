@@ -116,13 +116,20 @@ k8s_resource('driver-service', resource_deps=['driver-service-compile', 'rabbitm
 
 ### Web Frontend ###
 
-docker_build(
-  'ride-sharing/web',
-  '.',
-  dockerfile='./infra/development/docker/web.Dockerfile',
+# docker_build(
+#   'ride-sharing/web',
+#   '.',
+#   dockerfile='./infra/development/docker/web.Dockerfile',
+# )
+
+
+# k8s_yaml('./infra/development/k8s/web-deployment.yaml')
+# k8s_resource('web', port_forwards=3000, labels="frontend")
+
+local_resource(
+  name='web',
+  serve_cmd='npm run dev',
+  serve_dir='web',
+  labels=['frontend'],
 )
-
-k8s_yaml('./infra/development/k8s/web-deployment.yaml')
-k8s_resource('web', port_forwards=3000, labels="frontend")
-
 ### End of Web Frontend ###
