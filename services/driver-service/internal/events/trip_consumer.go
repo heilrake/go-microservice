@@ -11,6 +11,7 @@ import (
 	tripPublishers "ride-sharing/shared/messaging/publishers"
 
 	"github.com/rabbitmq/amqp091-go"
+	"math/rand"
 )
 
 type tripConsumer struct {
@@ -69,7 +70,10 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 		return nil
 	}
 
-	suitableDriverID := suitableIDs[0]
+	// Get a random index from the matching drivers
+	randomIndex := rand.Intn(len(suitableIDs))
+
+	suitableDriverID := suitableIDs[randomIndex]
 
 	marshalledEvent, err := json.Marshal(payload)
 	if err != nil {

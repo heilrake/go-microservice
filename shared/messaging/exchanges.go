@@ -57,5 +57,13 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		return err
 	}
 
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   NotifyDriverAssignmentQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.TripEventDriverAssigned},
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

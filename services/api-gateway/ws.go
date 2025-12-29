@@ -35,6 +35,7 @@ func handleRiderWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mess
 	// Initialize queue consumers
 	queues := []string{
 		messaging.NotifyDriverNoDriversFoundQueue,
+		messaging.NotifyDriverAssignmentQueue,
 	}
 
 	for _, q := range queues {

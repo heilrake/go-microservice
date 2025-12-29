@@ -12,6 +12,8 @@ import (
 	tripTypes "ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/types"
 
+	pbd "ride-sharing/shared/proto/driver"
+
 	"github.com/google/uuid"
 )
 
@@ -21,6 +23,8 @@ type TripService interface {
 	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel
 	GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*domain.RideFareModel, error)
 	GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error)
+	GetTripByID(ctx context.Context, id string) (*domain.TripModel, error)
+	UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error
 }
 
 type tripService struct {
@@ -121,6 +125,14 @@ func (s *tripService) GenerateTripFares(ctx context.Context, rideFares []*domain
 	}
 
 	return fares, nil
+}
+
+func (s *tripService) GetTripByID(ctx context.Context, id string) (*domain.TripModel, error) {
+	return s.repo.GetTripByID(ctx, id)
+}
+
+func (s *tripService) UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error {
+	return s.repo.UpdateTrip(ctx, tripID, status, driver)
 }
 
 func estimateFareRoute(fare *domain.RideFareModel, route *tripTypes.OsrmApiResponse) *domain.RideFareModel {

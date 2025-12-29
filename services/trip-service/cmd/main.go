@@ -49,7 +49,18 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
+	if err := rabbitmq.DeclareExchanges(); err != nil {
+		log.Fatalf("Failed to declare exchanges: %v", err)
+	}
+
 	publisher := events.NewTripEventPublisher(rabbitmq)
+
+	driverConsumer := events.NewDriverConsumer(rabbitmq, svc)
+	go func() {
+		if err := driverConsumer.Listen(); err != nil {
+			log.Fatalf("Failed to listen to driver messages: %v", err)
+		}
+	}()
 
 	grpcServer := grpcserver.NewServer()
 	grpc.NewGRPCHandler(grpcServer, svc, publisher)
