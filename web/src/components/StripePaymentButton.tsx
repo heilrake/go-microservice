@@ -1,3 +1,4 @@
+import { clientEnv } from '@/shared/configs/env';
 import { PaymentEventSessionCreatedData } from "../contracts"
 import { Button } from "./ui/button"
 import { loadStripe } from "@stripe/stripe-js"
@@ -8,7 +9,7 @@ interface StripePaymentButtonProps {
 }
 
 // Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = loadStripe(clientEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export const StripePaymentButton = ({
   paymentSession,
@@ -27,10 +28,10 @@ export const StripePaymentButton = ({
 
     if (error) {
       console.error("Payment error:", error)
-    }
+    } 
   }
 
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+  if (!clientEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     return (
       <Button
         disabled
