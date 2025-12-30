@@ -1,11 +1,11 @@
-import { Trip } from "../types"
+import { TripEvents, type TripEventType } from "../contracts"
+import type { Trip } from "../types"
 import { TripOverviewCard } from "./TripOverviewCard"
 import { Button } from "./ui/button"
-import { TripEvents } from "../contracts"
 
-interface DriverTripOverviewProps {
+type DriverTripOverviewProps = {
   trip?: Trip | null,
-  status?: TripEvents | null,
+  status?: TripEventType | null,
   onAcceptTrip?: () => void,
   onDeclineTrip?: () => void
 }

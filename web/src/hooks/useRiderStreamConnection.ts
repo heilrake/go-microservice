@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+
 import { WEBSOCKET_URL } from "../constants";
-import { Trip } from '../types';
-import { Driver, Coordinate } from '../types';
-import { PaymentEventSessionCreatedData, TripEvents, ServerWsMessage, isValidWsMessage, BackendEndpoints } from '../contracts';
+import type { PaymentEventSessionCreatedData, ServerWsMessage} from '../contracts';
+import { BackendEndpoints,isValidWsMessage, TripEvents } from '../contracts';
+import type { Trip } from '../types';
+import type { Coordinate,Driver } from '../types';
 
 export function useRiderStreamConnection(location: Coordinate, userID: string) {
   const [drivers, setDrivers] = useState<Driver[]>([]);

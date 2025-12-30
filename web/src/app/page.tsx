@@ -1,16 +1,17 @@
 "use client"
 
 // Assets
-import 'leaflet/dist/leaflet.css';
+import { Suspense,useState } from "react";
+import dynamic from 'next/dynamic'
+import { useRouter,useSearchParams } from 'next/navigation';
 // Fix for default marker icon
 import icon from 'leaflet/dist/images/marker-icon.png'
 import iconShadow from 'leaflet/dist/images/marker-shadow.png'
-import dynamic from 'next/dynamic'
-import { Button } from "../components/ui/button";
-import { useState, Suspense } from "react";
-import { useSearchParams, useRouter } from 'next/navigation';
-import { CarPackageSlug } from '../types';
+
+import 'leaflet/dist/leaflet.css';
 import { DriverPackageSelector } from '../components/DriverPackageSelector';
+import { Button } from "../components/ui/button";
+import { type CarPackageSlugType } from '../types';
 
 // Dynamically import components that use Leaflet
 const DriverMap = dynamic(() => import("../components/DriverMap").then(mod => mod.DriverMap), { ssr: false })
@@ -34,7 +35,7 @@ function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const payment = searchParams.get("payment")
-  const [packageSlug, setPackageSlug] = useState<CarPackageSlug | null>(null)
+  const [packageSlug, setPackageSlug] = useState<CarPackageSlugType | null>(null)
 
   const handleClick = (userType: "driver" | "rider") => {
     setUserType(userType)

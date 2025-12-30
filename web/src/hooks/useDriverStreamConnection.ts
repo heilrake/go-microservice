@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { WEBSOCKET_URL } from "../constants";
-import { Trip, Driver, CarPackageSlug } from '../types';
-import { ServerWsMessage, TripEvents, isValidWsMessage, isValidTripEvent, ClientWsMessage, BackendEndpoints } from '../contracts';
 
-interface useDriverConnectionProps {
+import { WEBSOCKET_URL } from "../constants";
+import type {ClientWsMessage, ServerWsMessage} from '../contracts';
+import { BackendEndpoints, isValidTripEvent, isValidWsMessage, TripEvents } from '../contracts';
+import type { CarPackageSlug,Driver, Trip } from '../types';
+
+type useDriverConnectionProps = {
   location: {
     latitude: number;
     longitude: number;

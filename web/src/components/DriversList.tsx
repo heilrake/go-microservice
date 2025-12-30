@@ -1,16 +1,16 @@
-import { Button } from "./ui/button"
 import { Clock } from 'lucide-react'
-import { RouteFare, TripPreview } from '../types'
-import { convertMetersToKilometers, convertSecondsToMinutes } from "../utils/math"
-import { cn } from "../lib/utils"
-import { PackagesMeta } from "./PackagesMeta"
 
-interface DriverListProps {
+import { cn } from "../lib/utils"
+import { type RouteFare, type TripPreview } from '../types'
+import { convertMetersToKilometers, convertSecondsToMinutes } from "../utils/math"
+import { PackagesMeta } from "./PackagesMeta"
+import { Button } from "./ui/button"
+
+type DriverListProps = {
   trip: TripPreview | null;
   onPackageSelect: (fare: RouteFare) => void
   onCancel: () => void
 }
-
 
 export function DriverList({ trip, onPackageSelect, onCancel }: DriverListProps) {
   return (

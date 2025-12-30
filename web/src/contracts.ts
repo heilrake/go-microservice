@@ -1,27 +1,29 @@
-import { Coordinate, Driver, Route, RouteFare, Trip } from "./types";
+import type { Coordinate, Driver, Route, RouteFare, Trip } from "./types";
 
 
 // These are the endpoints the API Gateway must have for the frontend to work correctly
-export enum BackendEndpoints {
-  PREVIEW_TRIP = "/trip/preview",
-  START_TRIP = "/trip/start",
-  WS_DRIVERS = "/drivers",
-  WS_RIDERS = "/riders",
-}
+export const BackendEndpoints = {
+  PREVIEW_TRIP: "/trip/preview",
+  START_TRIP: "/trip/start",
+  WS_DRIVERS: "/drivers",
+  WS_RIDERS: "/riders",
+} as const;
 
-export enum TripEvents {
-  NoDriversFound = "trip.event.no_drivers_found",
-  DriverAssigned = "trip.event.driver_assigned",
-  Completed = "trip.event.completed",
-  Cancelled = "trip.event.cancelled",
-  Created = "trip.event.created",
-  DriverLocation = "driver.cmd.location",
-  DriverTripRequest = "driver.cmd.trip_request",
-  DriverTripAccept = "driver.cmd.trip_accept",
-  DriverTripDecline = "driver.cmd.trip_decline",
-  DriverRegister = "driver.cmd.register",
-  PaymentSessionCreated = "payment.event.session_created",
-}
+export const TripEvents = {
+  NoDriversFound: "trip.event.no_drivers_found",
+  DriverAssigned: "trip.event.driver_assigned",
+  Completed: "trip.event.completed",
+  Cancelled: "trip.event.cancelled",
+  Created: "trip.event.created",
+  DriverLocation: "driver.cmd.location",
+  DriverTripRequest: "driver.cmd.trip_request",
+  DriverTripAccept: "driver.cmd.trip_accept",
+  DriverTripDecline: "driver.cmd.trip_decline",
+  DriverRegister: "driver.cmd.register",
+  PaymentSessionCreated: "payment.event.session_created",
+} as const;
+
+export type TripEventType = typeof TripEvents[keyof typeof TripEvents];
 
 // Messages sent from the server to the client via the websocket
 export type ServerWsMessage =
@@ -36,48 +38,48 @@ export type ServerWsMessage =
 // Messages sent from the client to the server via the websocket
 export type ClientWsMessage = DriverResponseToTripResponse
 
-interface TripCreatedRequest {
-  type: TripEvents.Created;
+type TripCreatedRequest = {
+  type: typeof TripEvents.Created;
   data: Trip;
 }
 
-interface NoDriversFoundRequest {
-  type: TripEvents.NoDriversFound;
+type NoDriversFoundRequest = {
+  type: typeof TripEvents.NoDriversFound;
 }
 
-interface DriverRegisterRequest {
-  type: TripEvents.DriverRegister;
+type DriverRegisterRequest = {
+  type: typeof TripEvents.DriverRegister;
   data: Driver;
 }
-interface DriverTripRequest {
-  type: TripEvents.DriverTripRequest;
+type DriverTripRequest = {
+  type: typeof TripEvents.DriverTripRequest;
   data: Trip;
 }
 
-export interface PaymentEventSessionCreatedData {
+export type PaymentEventSessionCreatedData = {
   tripID: string;
   sessionID: string;
   amount: number;
   currency: string;
-}
+};
 
-interface PaymentSessionCreatedRequest {
-  type: TripEvents.PaymentSessionCreated;
+type PaymentSessionCreatedRequest = {
+  type: typeof TripEvents.PaymentSessionCreated;
   data: PaymentEventSessionCreatedData;
-}
+};
 
-interface DriverAssignedRequest {
-  type: TripEvents.DriverAssigned;
+type DriverAssignedRequest = {
+  type: typeof TripEvents.DriverAssigned;
   data: Trip;
 }
 
-interface DriverLocationRequest {
-  type: TripEvents.DriverLocation;
+type DriverLocationRequest = {
+  type: typeof TripEvents.DriverLocation;
   data: Driver[];
 }
 
-interface DriverResponseToTripResponse {
-  type: TripEvents.DriverTripAccept | TripEvents.DriverTripDecline;
+type DriverResponseToTripResponse = {
+  type: typeof TripEvents.DriverTripAccept | typeof TripEvents.DriverTripDecline;
   data: {
     tripID: string;
     riderID: string;
@@ -85,26 +87,28 @@ interface DriverResponseToTripResponse {
   };
 }
 
-export interface HTTPTripPreviewResponse {
+export type HTTPTripPreviewResponse = {
   route: Route;
   rideFares: RouteFare[];
 }
 
-export interface HTTPTripStartRequestPayload {
+export type HTTPTripStartRequestPayload = {
   rideFareID: string;
   userID: string;
 }
 
-export interface HTTPTripPreviewRequestPayload {
+export type HTTPTripPreviewRequestPayload = {
   userID: string;
   pickup: Coordinate;
   destination: Coordinate;
 }
 
-export function isValidTripEvent(event: string): event is TripEvents {
-  return Object.values(TripEvents).includes(event as TripEvents);
+export function isValidTripEvent(event: string): event is TripEventType {
+  return Object.values(TripEvents).includes(event as TripEventType);
 }
 
-export function isValidWsMessage(message: ServerWsMessage): message is ServerWsMessage {
+export function isValidWsMessage(
+  message: { type: string }
+): message is ServerWsMessage {
   return isValidTripEvent(message.type);
 }

@@ -1,9 +1,9 @@
-import { PackagesMeta } from './PackagesMeta'
-import { CarPackageSlug } from '../types'
 import { cn } from "../lib/utils"
+import {type  CarPackageSlugType } from '../types'
+import { PackagesMeta } from './PackagesMeta'
 
-interface DriverPackageSelectorProps {
-  onSelect: (packageSlug: CarPackageSlug) => void
+type  DriverPackageSelectorProps = {
+  onSelect: (packageSlug: CarPackageSlugType) => void
 }
 
 export function DriverPackageSelector({ onSelect }: DriverPackageSelectorProps) {
@@ -20,7 +20,7 @@ export function DriverPackageSelector({ onSelect }: DriverPackageSelectorProps) 
                 "flex items-center gap-3 sm:gap-4 p-3 sm:p-4 sm:rounded-lg sm:border transition-all cursor-pointer",
                 "hover:border-primary hover:bg-primary/5",
               )}
-              onClick={() => onSelect(slug as CarPackageSlug)}
+              onClick={() => onSelect(slug as CarPackageSlugType)}
             >
               <div className="p-1.5 sm:p-2 bg-gray-100 rounded-lg">
                 {meta?.icon}

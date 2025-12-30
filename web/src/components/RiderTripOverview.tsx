@@ -1,17 +1,18 @@
-import { RouteFare, TripPreview, Driver } from "../types"
-import { DriverList } from "./DriversList"
-import { Card } from "./ui/card"
-import { Button } from "./ui/button"
+import type { PaymentEventSessionCreatedData} from "../contracts";
+import { TripEvents, type  TripEventType } from "../contracts"
+import type { Driver,RouteFare, TripPreview } from "../types"
 import { convertMetersToKilometers, convertSecondsToMinutes } from "../utils/math"
-import { Skeleton } from "./ui/skeleton"
-import { TripOverviewCard } from "./TripOverviewCard"
-import { StripePaymentButton } from "./StripePaymentButton"
 import { DriverCard } from "./DriverCard"
-import { TripEvents, PaymentEventSessionCreatedData } from "../contracts"
+import { DriverList } from "./DriversList"
+import { StripePaymentButton } from "./StripePaymentButton"
+import { TripOverviewCard } from "./TripOverviewCard"
+import { Button } from "./ui/button"
+import { Card } from "./ui/card"
+import { Skeleton } from "./ui/skeleton"
 
-interface TripOverviewProps {
+type TripOverviewProps = {
   trip: TripPreview | null;
-  status: TripEvents | null;
+  status: TripEventType | null;
   assignedDriver?: Driver | null;
   paymentSession?: PaymentEventSessionCreatedData | null;
   onPackageSelect: (carPackage: RouteFare) => void;

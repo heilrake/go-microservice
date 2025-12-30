@@ -1,8 +1,10 @@
-import { Bus, Truck, Crown } from "lucide-react";
+import { Bus, Crown,Truck } from "lucide-react";
 import { Car } from "lucide-react";
+
+import type {CarPackageSlugType } from "../types";
 import { CarPackageSlug } from "../types";
 
-export const PackagesMeta: Record<CarPackageSlug, {
+export const PackagesMeta: Record<CarPackageSlugType, {
   name: string,
   icon: React.ReactNode,
   description: string,

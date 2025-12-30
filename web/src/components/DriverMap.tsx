@@ -1,17 +1,18 @@
 "use client"
 
-import { useDriverStreamConnection } from "../hooks/useDriverStreamConnection"
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
-import L from 'leaflet';
-import { MapClickHandler } from './MapClickHandler';
 import { useMemo, useState } from "react";
 import { useRef } from "react";
-import { CarPackageSlug, Coordinate } from "../types";
-import { DriverTripOverview } from "./DriverTripOverview";
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import L from 'leaflet';
 import * as Geohash from 'ngeohash';
-import { RoutingControl } from "./RoutingControl";
-import { DriverCard } from "./DriverCard";
+
 import { TripEvents } from "../contracts";
+import { useDriverStreamConnection } from "../hooks/useDriverStreamConnection"
+import { type CarPackageSlugType, type Coordinate } from "../types";
+import { DriverCard } from "./DriverCard";
+import { DriverTripOverview } from "./DriverTripOverview";
+import { MapClickHandler } from './MapClickHandler';
+import { RoutingControl } from "./RoutingControl";
 
 const START_LOCATION: Coordinate = {
   latitude: 49.438280,
@@ -38,7 +39,7 @@ const destinationMarker = new L.Icon({
   iconAnchor: [20, 40], // Anchor point
 });
 
-export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlug }) => {
+export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) => {
   const mapRef = useRef<L.Map>(null)
   const userID = useMemo(() => crypto.randomUUID(), [])
   const [riderLocation, setRiderLocation] = useState<Coordinate>(START_LOCATION)

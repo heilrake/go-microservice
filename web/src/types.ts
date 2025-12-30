@@ -1,4 +1,4 @@
-export interface Trip {
+export type Trip = {
     id: string;
     userID: string;
     status: string;
@@ -8,17 +8,17 @@ export interface Trip {
     trip: Trip;
 }
 
-export interface RequestRideProps {
+export type RequestRideProps = {
     pickup: [number, number],
     destination: [number, number],
 }
 
-export interface Coordinate {
+export type Coordinate = {
     latitude: number,
     longitude: number,
 }
 
-export interface Route {
+export type Route = {
     geometry: {
         coordinates: Coordinate[]
     }[],
@@ -26,16 +26,18 @@ export interface Route {
     distance: number,
 }
 
-export enum CarPackageSlug {
-    SEDAN = "sedan",
-    SUV = "suv",
-    VAN = "van",
-    LUXURY = "luxury",
-}
+export const CarPackageSlug = {
+    SEDAN: "sedan",
+    SUV: "suv",
+    VAN: "van",
+    LUXURY: "luxury",
+} as const;
 
-export interface RouteFare {
+export type CarPackageSlugType = typeof CarPackageSlug[keyof typeof CarPackageSlug];
+
+export type RouteFare = {
     id: string,
-    packageSlug: CarPackageSlug,
+    packageSlug: CarPackageSlugType,
     basePrice: number,
     totalPriceInCents?: number,
     expiresAt: Date,
@@ -43,11 +45,11 @@ export interface RouteFare {
 }
 
 
-export interface HTTPTripStartResponse {
+export type HTTPTripStartResponse = {
     tripID: string;
 }
 
-export interface TripPreview {
+export type TripPreview = {
     tripID: string,
     route: [number, number][],
     rideFares: RouteFare[],
@@ -56,7 +58,7 @@ export interface TripPreview {
 }
 
 
-export interface Driver {
+export type Driver = {
     id: string;
     location: Coordinate;
     geohash: string;

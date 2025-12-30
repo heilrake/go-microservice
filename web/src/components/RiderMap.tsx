@@ -1,18 +1,19 @@
 'use client';
 
-import Image from 'next/image';
-import { useRiderStreamConnection } from '../hooks/useRiderStreamConnection';
-import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet'
-import L from 'leaflet';
-import { getGeohashBounds } from '../utils/geohash';
 import { useMemo, useRef, useState } from 'react';
-import { MapClickHandler } from './MapClickHandler';
-import { Button } from './ui/button';
-import { RouteFare, RequestRideProps, TripPreview, HTTPTripStartResponse } from "../types";
-import { RoutingControl } from "./RoutingControl";
+import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet'
+import Image from 'next/image';
+import L from 'leaflet';
+
 import { API_URL } from '../constants';
+import { BackendEndpoints, type HTTPTripPreviewRequestPayload, type HTTPTripPreviewResponse, type HTTPTripStartRequestPayload } from '../contracts';
+import { useRiderStreamConnection } from '../hooks/useRiderStreamConnection';
+import { type HTTPTripStartResponse,type RequestRideProps, type RouteFare, type TripPreview } from "../types";
+import { getGeohashBounds } from '../utils/geohash';
+import { MapClickHandler } from './MapClickHandler';
 import { RiderTripOverview } from './RiderTripOverview';
-import { BackendEndpoints, HTTPTripPreviewRequestPayload, HTTPTripPreviewResponse, HTTPTripStartRequestPayload } from '../contracts';
+import { RoutingControl } from "./RoutingControl";
+import { Button } from './ui/button';
 
 const userMarker = new L.Icon({
     iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Map_pin_icon.svg/176px-Map_pin_icon.svg.png",
@@ -26,7 +27,7 @@ const driverMarker = new L.Icon({
     iconAnchor: [15, 30],
 });
 
-interface RiderMapProps {
+type RiderMapProps = {
     onRouteSelected?: (distance: number) => void;
 }
 

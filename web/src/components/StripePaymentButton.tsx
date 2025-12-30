@@ -1,9 +1,11 @@
-import { clientEnv } from '@/shared/configs/env';
-import { PaymentEventSessionCreatedData } from "../contracts"
-import { Button } from "./ui/button"
 import { loadStripe } from "@stripe/stripe-js"
 
-interface StripePaymentButtonProps {
+import { clientEnv } from '@/shared/configs/env';
+
+import type { PaymentEventSessionCreatedData } from "../contracts"
+import { Button } from "./ui/button"
+
+type StripePaymentButtonProps = {
   paymentSession: PaymentEventSessionCreatedData
   isLoading?: boolean
 }

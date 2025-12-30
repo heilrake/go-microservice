@@ -1,8 +1,9 @@
-import { Driver, CarPackageSlug } from "../types";
 import Image from "next/image";
+
+import { type CarPackageSlugType,type Driver } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-export const DriverCard = ({ driver, packageSlug }: { driver?: Driver | null, packageSlug?: CarPackageSlug }) => {
+export const DriverCard = ({ driver, packageSlug }: { driver?: Driver | null, packageSlug?: CarPackageSlugType }) => {
   if (!driver) return null;
 
   const CarPlate = ({ plate }: { plate: string }) => (

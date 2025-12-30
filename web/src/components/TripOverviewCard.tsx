@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { ScrollArea } from "./ui/scroll-area"
 
-interface TripOverviewCardProps {
+type TripOverviewCardProps = {
   title: string
   description: string
   children?: React.ReactNode
