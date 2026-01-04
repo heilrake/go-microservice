@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"ride-sharing/services/payment-service/internal/bootstrap"
 	"ride-sharing/services/payment-service/internal/infrastructure/events"
 	"ride-sharing/services/payment-service/internal/infrastructure/stripe"
 	"ride-sharing/services/payment-service/internal/service"
 	"ride-sharing/services/payment-service/pkg/types"
 	"ride-sharing/shared/env"
-	"ride-sharing/shared/messaging"
 )
 
 var GrpcAddr = env.GetString("GRPC_ADDR", ":9004")
@@ -39,25 +39,16 @@ func main() {
 		SuccessURL:      env.GetString("STRIPE_SUCCESS_URL", appURL+"?payment=success"),
 		CancelURL:       env.GetString("STRIPE_CANCEL_URL", appURL+"?payment=cancel"),
 	}
+	// stripeApi.Key = stripeCfg.StripeSecretKey
 
-	if stripeCfg.StripeSecretKey == "" {
-		log.Fatalf("STRIPE_SECRET_KEY is not set")
-		return
-	}
+	bootstrap.InitStripe(stripeCfg)
 
-	// stripe processor
 	paymentProcessor := stripe.NewStripeClient(stripeCfg)
 
-	// payment service
 	paymentService := service.NewPaymentService(paymentProcessor)
 
-	log.Println(paymentService)
+	rabbitmq := bootstrap.InitRabbitMQ(rabbitMqURI)
 
-	// RabbitMQ connection
-	rabbitmq, err := messaging.NewRabbitMQ(rabbitMqURI)
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer rabbitmq.Close()
 
 	log.Println("Starting RabbitMQ connection")
