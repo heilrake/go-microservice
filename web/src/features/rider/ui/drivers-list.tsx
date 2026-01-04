@@ -1,6 +1,6 @@
 import { Clock } from 'lucide-react'
 
-import { PackagesMeta } from "@/features/packages";
+import { type CarPackageSlugType, PackagesMeta } from "@/features/packages";
 import { convertMetersToKilometers, convertSecondsToMinutes } from "@/features/rider/lib/math"
 import type { RouteFare, TripPreview } from "@/features/trip";
 
@@ -9,11 +9,12 @@ import { Button } from "@/shared/ui/button"
 
 type DriverListProps = {
   trip: TripPreview | null;
+  selectedCarType?: CarPackageSlugType | null;
   onPackageSelect: (fare: RouteFare) => void
   onCancel: () => void
 }
 
-export function DriverList({ trip, onPackageSelect, onCancel }: DriverListProps) {
+export function DriverList({ trip, selectedCarType, onPackageSelect, onCancel }: DriverListProps) {
   return (
     <div className="flex items-center justify-center p-4 min-h-screen bg-black/20">
       <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
@@ -34,6 +35,7 @@ export function DriverList({ trip, onPackageSelect, onCancel }: DriverListProps)
                 className={cn(
                   "flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer",
                   "hover:border-primary hover:bg-primary/5",
+                  selectedCarType === fare.packageSlug && "border-primary bg-primary/5"
                 )}
                 onClick={() => onPackageSelect(fare)}
               >

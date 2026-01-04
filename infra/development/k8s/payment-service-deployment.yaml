@@ -42,10 +42,10 @@ spec:
                 secretKeyRef:
                   name: stripe-secrets
                   key: stripe-secret-key
-            - name: JAEGER_ENDPOINT
+            - name: OTEL_ENDPOINT
               valueFrom:
                 configMapKeyRef:
-                  key: JAEGER_ENDPOINT
+                  key: OTEL_ENDPOINT
                   name: app-config
 
             # RabbitMQ credentials

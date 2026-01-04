@@ -25,7 +25,7 @@ func main() {
 	tracerCfg := tracing.Config{
 		ServiceName:    "driver-service",
 		Environment:    env.GetString("ENVIRONMENT", "development"),
-		JaegerEndpoint: env.GetString("JAEGER_ENDPOINT", "http://jaeger:14268/api/traces"),
+		JaegerEndpoint: env.GetString("OTEL_ENDPOINT", "jaeger:4318"),
 	}
 
 	sh, err := tracing.InitTracer(tracerCfg)
@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	grpcServer := grpcserver.NewServer()
+	grpcServer := grpcserver.NewServer(tracing.WithTracingInterceptors()...)
 
 	// RabbitMQ connection
 	rabbitmq, err := messaging.NewRabbitMQ(rabbitMqURI)

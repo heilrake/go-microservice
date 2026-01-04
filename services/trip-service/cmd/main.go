@@ -25,7 +25,7 @@ func main() {
 	tracerCfg := tracing.Config{
 		ServiceName:    "trip-service",
 		Environment:    env.GetString("ENVIRONMENT", "development"),
-		JaegerEndpoint: env.GetString("JAEGER_ENDPOINT", "http://jaeger:14268/api/traces"),
+		JaegerEndpoint: env.GetString("OTEL_ENDPOINT", "jaeger:4318"),
 	}
 	sh, err := tracing.InitTracer(tracerCfg)
 	if err != nil {
@@ -75,7 +75,7 @@ func main() {
 		}
 	}()
 
-	grpcServer := grpcserver.NewServer()
+	grpcServer := grpcserver.NewServer(tracing.WithTracingInterceptors()...)
 	grpc.NewGRPCHandler(grpcServer, svc, publisher)
 
 	log.Printf("Starting gRPC server Trip service on port %s", lis.Addr().String())

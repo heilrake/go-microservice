@@ -35,10 +35,10 @@ spec:
               value: 'trip-service:9093'
             - name: DRIVER_SERVICE_URL
               value: 'driver-service:9094'
-            - name: JAEGER_ENDPOINT
+            - name: OTEL_ENDPOINT
               valueFrom:
                 configMapKeyRef:
-                  key: JAEGER_ENDPOINT
+                  key: OTEL_ENDPOINT
                   name: app-config
             - name: RABBITMQ_URI
               valueFrom:

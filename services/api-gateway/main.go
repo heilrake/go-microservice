@@ -26,7 +26,7 @@ func main() {
 	tracerCfg := tracing.Config{
 		ServiceName:    "api-gateway",
 		Environment:    env.GetString("ENVIRONMENT", "development"),
-		JaegerEndpoint: env.GetString("JAEGER_ENDPOINT", "http://jaeger:14268/api/traces"),
+		JaegerEndpoint: env.GetString("OTEL_ENDPOINT", "jaeger:4318"),
 	}
 
 	sh, err := tracing.InitTracer(tracerCfg)
@@ -50,18 +50,18 @@ func main() {
 	log.Println("Starting RabbitMQ connection")
 
 	// HTTP and WebSocket routes (explicit methods for Go 1.22+ patterns)
-	mux.HandleFunc("POST /trip/preview", enableCORS(handleTripPreview))
-	mux.HandleFunc("POST /trip/start", enableCORS(handleTripStart))
-	mux.HandleFunc("/ws/drivers", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(enableCORS(handleTripPreview), "handleTripPreview"))
+	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(enableCORS(handleTripStart), "handleTripStart"))
+	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
-	})
-	mux.HandleFunc("/ws/riders", func(w http.ResponseWriter, r *http.Request) {
+	}, "/ws/drivers"))
+	mux.Handle("/ws/riders", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleRiderWebSocket(w, r, rabbitmq)
-	})
+	}, "/ws/riders"))
 
-	mux.HandleFunc("/webhook/stripe", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)
-	})
+	}, "/webhook/stripe"))
 
 	server := &http.Server{
 		Addr:    httpAddr,

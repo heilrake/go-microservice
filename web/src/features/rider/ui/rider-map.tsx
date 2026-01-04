@@ -6,6 +6,7 @@ import Image from 'next/image';
 import L from 'leaflet';
 
 import { getGeohashBounds,MapClickHandler, RoutingControl } from "@/features/map";
+import type { CarPackageSlugType } from '@/features/packages';
 import type { HTTPTripStartResponse, RequestRideProps, RouteFare, TripPreview } from "@/features/trip";
 
 import { API_URL } from '@/shared/libs/constants';
@@ -34,6 +35,7 @@ type RiderMapProps = {
 export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   const [trip, setTrip] = useState<TripPreview | null>(null)
   const [selectedCarPackage] = useState<RouteFare | null>(null)
+  const [selectedCarType, setSelectedCarType] = useState<CarPackageSlugType | null>(null)
   const [destination, setDestination] = useState<[number, number] | null>(null)
   const mapRef = useRef<L.Map>(null)
   const userID = useMemo(() => crypto.randomUUID(), [])
@@ -111,6 +113,8 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
       rideFareID: fare.id,
       userID: userID,
     } as HTTPTripStartRequestPayload
+
+    setSelectedCarType(fare.packageSlug)
 
     if (!fare.id) {
       alert("No Fare ID in the payload")
@@ -222,6 +226,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
           assignedDriver={assignedDriver}
           status={tripStatus}
           paymentSession={paymentSession}
+          selectedCarType={selectedCarType}
           onPackageSelect={handleStartTrip}
           onCancel={handleCancelTrip}
         />

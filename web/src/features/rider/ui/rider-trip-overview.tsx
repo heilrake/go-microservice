@@ -1,5 +1,6 @@
 import type { Driver } from "@/features/driver/models/types";
 import { DriverCard } from "@/features/driver/ui/driver-card";
+import type { CarPackageSlugType } from "@/features/packages";
 import type { PaymentEventSessionCreatedData } from "@/features/payment";
 import { StripePaymentButton } from "@/features/payment";
 import type { RouteFare, TripPreview } from "@/features/trip";
@@ -18,6 +19,7 @@ type TripOverviewProps = {
   status: TripEventType | null;
   assignedDriver?: Driver | null;
   paymentSession?: PaymentEventSessionCreatedData | null;
+  selectedCarType?: CarPackageSlugType | null;
   onPackageSelect: (carPackage: RouteFare) => void;
   onCancel: () => void;
 }
@@ -27,6 +29,7 @@ export const RiderTripOverview = ({
   status,
   assignedDriver,
   paymentSession,
+  selectedCarType,
   onPackageSelect,
   onCancel,
 }: TripOverviewProps) => {
@@ -143,6 +146,7 @@ export const RiderTripOverview = ({
     return (
       <DriverList
         trip={trip}
+        selectedCarType={selectedCarType}
         onPackageSelect={onPackageSelect}
         onCancel={onCancel}
       />
