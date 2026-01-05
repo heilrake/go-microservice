@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"ride-sharing/shared/messaging"
+	"ride-sharing/shared/tracing"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -34,16 +35,20 @@ func (c *PaymentConsumer) Consume(queue string, handler func(context.Context, am
 		return err
 	}
 
-	ctx := context.Background()
 	go func() {
 		for msg := range msgs {
-			log.Printf("Received message: %s", msg.Body)
-			if err := handler(ctx, msg); err != nil {
-				log.Printf("Handler error: %v", err)
-				_ = msg.Nack(false, false)
-				continue
+			if err := tracing.TracedConsumer(msg, func(ctx context.Context, d amqp.Delivery) error {
+				log.Printf("Received message: %s", msg.Body)
+				if err := handler(ctx, msg); err != nil {
+					log.Printf("Handler error: %v", err)
+					_ = msg.Nack(false, false)
+					return err
+				}
+				_ = msg.Ack(false)
+				return nil
+			}); err != nil {
+				log.Printf("Error processing message: %v", err)
 			}
-			_ = msg.Ack(false)
 		}
 	}()
 
