@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trip-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,6 +44,11 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: TRIP_POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
           resources:
             requests:
               memory: '128Mi'
@@ -40,6 +56,10 @@ spec:
             limits:
               memory: '256Mi'
               cpu: '500m'
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: trip-postgres-pvc
 ---
 apiVersion: v1
 kind: Service
