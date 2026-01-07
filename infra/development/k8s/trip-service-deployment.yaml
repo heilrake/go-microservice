@@ -35,6 +35,11 @@ spec:
                 configMapKeyRef:
                   key: OTEL_ENDPOINT
                   name: app-config
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: TRIP_DB_DSN
 ---
 apiVersion: v1
 kind: Service

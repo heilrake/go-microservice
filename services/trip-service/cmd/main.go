@@ -6,14 +6,19 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"syscall"
+
+	tripinternal "ride-sharing/services/trip-service/internal"
+	"ride-sharing/services/trip-service/internal/infrastructure/db"
 	"ride-sharing/services/trip-service/internal/infrastructure/events"
 	"ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
-	"ride-sharing/services/trip-service/internal/service"
+	service "ride-sharing/services/trip-service/internal/service"
+	"ride-sharing/services/trip-service/pkg/types"
+	sharedBootstrap "ride-sharing/shared/bootstrap"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/tracing"
-	"syscall"
 
 	grpcserver "google.golang.org/grpc"
 )
@@ -34,8 +39,35 @@ func main() {
 
 	rabbitMqURI := env.GetString("RABBITMQ_URI", "amqp://admin:admin@rabbitmq:5672")
 
-	inmemRepo := repository.NewInmemRepository()
-	svc := service.NewTripServer(inmemRepo)
+	// Initialize PostgreSQL config
+	pgConfig := &types.PostgresConfig{
+		DSN:      env.GetString("DATABASE_URL", "postgres://trip_user:trip_password@trip-postgres:5432/trip_db?sslmode=disable"),
+		MaxConns: int32(env.GetInt("DB_MAX_CONNS", 10)),
+		MinConns: int32(env.GetInt("DB_MIN_CONNS", 2)),
+	}
+
+	// Run migrations on startup
+	err = sharedBootstrap.RunMigrator(sharedBootstrap.MigratorConfig{
+		MigrationsFS:  tripinternal.Migrations,
+		MigrationsDir: "migrations",
+		DatabaseURL:   pgConfig.DSN,
+		ServiceName:   "trip-service",
+	})
+	if err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
+	// Initialize GORM database connection
+	gormDB := infrastructure.InitGorm(pgConfig)
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		log.Fatalf("failed to get underlying sql.DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	// Initialize PostgreSQL repository with GORM
+	repo := repository.NewPostgresRepository(gormDB)
+	svc := service.NewTripServer(repo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -49,8 +49,6 @@ func (c *FindDriversConsumer) Consume(queue string, handler func(context.Context
 			}); err != nil {
 				log.Printf("Error processing message: %v", err)
 			}
-			_ = msg.Ack(false)
-
 		}
 	}()
 

@@ -73,6 +73,9 @@ func (h *gRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest)
 	}
 
 	trip, err := h.service.CreateTrip(ctx, rideFare)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create the trip: %v", err)
+	}
 
 	if err := h.publisher.PublishTripCreated(ctx, trip); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to publish the trip created event: %v", err)

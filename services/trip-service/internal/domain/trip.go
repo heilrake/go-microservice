@@ -12,14 +12,19 @@ type TripModel struct {
 
 func (t *TripModel) ToProto() *pb.Trip {
 	var route *pb.Route
-	if t.RideFare != nil && t.RideFare.Route != nil {
-		route = t.RideFare.Route.ToProto()
+	var selectedFare *pb.RideFare
+
+	if t.RideFare != nil {
+		selectedFare = t.RideFare.ToProto()
+		if t.RideFare.Route != nil {
+			route = t.RideFare.Route.ToProto()
+		}
 	}
 
 	return &pb.Trip{
 		Id:           t.ID,
 		UserID:       t.UserID,
-		SelectedFare: t.RideFare.ToProto(),
+		SelectedFare: selectedFare,
 		Status:       t.Status,
 		Driver:       t.Driver,
 		Route:        route,

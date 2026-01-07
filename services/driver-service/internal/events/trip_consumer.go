@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"ride-sharing/services/driver-service/internal/service"
 	"ride-sharing/shared/contracts"
@@ -10,8 +11,9 @@ import (
 	"ride-sharing/shared/messaging/consumers"
 	tripPublishers "ride-sharing/shared/messaging/publishers"
 
-	"github.com/rabbitmq/amqp091-go"
 	"math/rand"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type tripConsumer struct {
@@ -54,6 +56,11 @@ func (c *tripConsumer) Listen() error {
 }
 
 func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload messaging.TripEventData) error {
+	if payload.Trip == nil || payload.Trip.SelectedFare == nil {
+		log.Printf("Trip has no selected fare, cannot find drivers")
+		return fmt.Errorf("trip has no selected fare")
+	}
+
 	suitableIDs := c.service.FindAvailableDrivers(ctx, payload.Trip.SelectedFare.PackageSlug)
 
 	log.Printf("Found suitable drivers %v", len(suitableIDs))

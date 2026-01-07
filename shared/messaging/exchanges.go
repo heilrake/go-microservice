@@ -33,6 +33,15 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		}
 	}
 
+	// Queue for driver-service to find available drivers when trip is created
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   FindAvailableDriversQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.TripEventCreated, contracts.TripEventDriverNotInterested},
+	}); err != nil {
+		return err
+	}
+
 	if err := r.DeclareQueue(QueueConfig{
 		QueueName:   DriverCmdTripRequestQueue,
 		Exchanges:   []string{TripExchange},
