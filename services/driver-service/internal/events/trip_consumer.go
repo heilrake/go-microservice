@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"ride-sharing/services/driver-service/internal/service"
+	"ride-sharing/services/driver-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/messaging/consumers"
@@ -18,10 +18,10 @@ import (
 
 type tripConsumer struct {
 	rabbitmq *messaging.RabbitMQ
-	service  service.DriverService
+	service  domain.DriverService
 }
 
-func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service service.DriverService) *tripConsumer {
+func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service domain.DriverService) *tripConsumer {
 	return &tripConsumer{
 		rabbitmq: rabbitmq,
 		service:  service,
@@ -61,11 +61,14 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 		return fmt.Errorf("trip has no selected fare")
 	}
 
-	suitableIDs := c.service.FindAvailableDrivers(ctx, payload.Trip.SelectedFare.PackageSlug)
+	suitableDrivers, err := c.service.FindAvailableDrivers(ctx, payload.Trip.SelectedFare.PackageSlug)
+	if err != nil {
+		return err
+	}
 
-	log.Printf("Found suitable drivers %v", len(suitableIDs))
+	log.Printf("Found suitable drivers %v", len(suitableDrivers))
 
-	if len(suitableIDs) == 0 {
+	if len(suitableDrivers) == 0 {
 		// Notify the driver that no drivers are available
 		if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
 			OwnerID: payload.Trip.UserID,
@@ -78,9 +81,9 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 	}
 
 	// Get a random index from the matching drivers
-	randomIndex := rand.Intn(len(suitableIDs))
+	randomIndex := rand.Intn(len(suitableDrivers))
 
-	suitableDriverID := suitableIDs[randomIndex]
+	suitableDriver := suitableDrivers[randomIndex]
 
 	marshalledEvent, err := json.Marshal(payload)
 	if err != nil {
@@ -89,7 +92,7 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 
 	// Notify the driver about a potential trip
 	if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.DriverCmdTripRequest, contracts.AmqpMessage{
-		OwnerID: suitableDriverID,
+		OwnerID: suitableDriver.ID,
 		Data:    marshalledEvent,
 	}); err != nil {
 		log.Printf("Failed to publish message to exchange: %v", err)

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"ride-sharing/services/trip-service/internal/service"
+	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/messaging/consumers"
@@ -16,10 +16,10 @@ import (
 
 type DriverConsumer struct {
 	rabbitmq *messaging.RabbitMQ
-	service  service.TripService
+	service  domain.TripService
 }
 
-func NewDriverConsumer(rabbitmq *messaging.RabbitMQ, service service.TripService) *DriverConsumer {
+func NewDriverConsumer(rabbitmq *messaging.RabbitMQ, service domain.TripService) *DriverConsumer {
 	return &DriverConsumer{
 		rabbitmq: rabbitmq,
 		service:  service,

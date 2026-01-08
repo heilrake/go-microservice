@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"ride-sharing/services/driver-service/internal/service"
+	"ride-sharing/services/driver-service/internal/domain"
 	pb "ride-sharing/shared/proto/driver"
 
 	"google.golang.org/grpc"
@@ -13,10 +13,10 @@ import (
 type driverGrpcHandler struct {
 	pb.UnimplementedDriverServiceServer
 
-	service service.DriverService
+	service domain.DriverService
 }
 
-func NewGrpcHandler(s *grpc.Server, service service.DriverService) {
+func NewGrpcHandler(s *grpc.Server, service domain.DriverService) {
 	handler := &driverGrpcHandler{
 		service: service,
 	}
@@ -25,19 +25,19 @@ func NewGrpcHandler(s *grpc.Server, service service.DriverService) {
 }
 
 func (h *driverGrpcHandler) RegisterDriver(ctx context.Context, req *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
-	driver, err := h.service.RegisterDriver(req.GetDriverID(), req.GetPackageSlug())
+	driver, err := h.service.RegisterDriver(ctx, req.GetPackageSlug())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to register driver")
 	}
 
 	return &pb.RegisterDriverResponse{
-		Driver: driver,
+		Driver: driver.ToProto(),
 	}, nil
 }
 
 func (h *driverGrpcHandler) UnRegisterDriver(ctx context.Context, req *pb.RegisterDriverRequest) (*pb.RegisterDriverResponse, error) {
 
-	if err := h.service.UnregisterDriver(req.GetDriverID()); err != nil {
+	if err := h.service.UnregisterDriver(ctx, req.GetDriverID()); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to unregister driver")
 	}
 

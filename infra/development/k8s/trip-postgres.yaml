@@ -71,5 +71,6 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
-      nodePort: 30432 # Доступний на localhost:30432
+      nodePort: 30432
   type: NodePort
+

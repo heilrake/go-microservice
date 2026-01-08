@@ -5,7 +5,6 @@ import (
 	"log"
 	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/services/trip-service/internal/infrastructure/events"
-	"ride-sharing/services/trip-service/internal/service"
 	pb "ride-sharing/shared/proto/trip"
 	"ride-sharing/shared/types"
 
@@ -17,11 +16,11 @@ import (
 type gRPCHandler struct {
 	pb.UnimplementedTripServiceServer
 
-	service   service.TripService
+	service   domain.TripService
 	publisher events.TripEventPublisher
 }
 
-func NewGRPCHandler(server *grpc.Server, service service.TripService, publisher *events.TripEventPublisher) *gRPCHandler {
+func NewGRPCHandler(server *grpc.Server, service domain.TripService, publisher *events.TripEventPublisher) *gRPCHandler {
 	handler := &gRPCHandler{
 		service:   service,
 		publisher: *publisher,

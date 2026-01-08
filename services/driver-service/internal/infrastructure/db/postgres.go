@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"log"
+
 	"ride-sharing/shared/types"
 
 	"gorm.io/driver/postgres"

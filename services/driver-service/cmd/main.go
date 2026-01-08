@@ -8,12 +8,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	driverInternal "ride-sharing/services/driver-service/internal"
 	"ride-sharing/services/driver-service/internal/events"
+	infrastructure "ride-sharing/services/driver-service/internal/infrastructure/db"
 	grpcHandler "ride-sharing/services/driver-service/internal/infrastructure/grpc"
+	"ride-sharing/services/driver-service/internal/infrastructure/repository"
 	"ride-sharing/services/driver-service/internal/service"
+	sharedBootstrap "ride-sharing/shared/bootstrap"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/tracing"
+	"ride-sharing/shared/types"
 
 	grpcserver "google.golang.org/grpc"
 )
@@ -34,6 +39,37 @@ func main() {
 	}
 
 	rabbitMqURI := env.GetString("RABBITMQ_URI", "amqp://admin:admin@rabbitmq:5672")
+
+	// Initialize PostgreSQL config
+	pgConfig := &types.PostgresConfig{
+		DSN:      env.GetString("DATABASE_URL", "postgres://driver_user:driver_password@driver-postgres:5432/driver_db?sslmode=disable"),
+		MaxConns: int32(env.GetInt("DB_MAX_CONNS", 10)),
+		MinConns: int32(env.GetInt("DB_MIN_CONNS", 2)),
+	}
+
+	// Run migrations on startup
+	err = sharedBootstrap.RunMigrator(sharedBootstrap.MigratorConfig{
+		MigrationsFS:  driverInternal.Migrations,
+		MigrationsDir: "migrations",
+		DatabaseURL:   pgConfig.DSN,
+		ServiceName:   "driver-service",
+	})
+	if err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
+	// Initialize GORM database connection
+	gormDB := infrastructure.InitGorm(pgConfig)
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		log.Fatalf("failed to get underlying sql.DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	// Initialize PostgreSQL repository with GORM
+	repo := repository.NewPostgresRepository(gormDB)
+	svc := service.NewDriverService(repo)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	defer sh(ctx)
@@ -58,11 +94,9 @@ func main() {
 	}
 	defer rabbitmq.Close()
 
-	driverService := service.NewService()
-
 	log.Println("Starting RabbitMQ connection")
 
-	consumer := events.NewTripConsumer(rabbitmq, driverService)
+	consumer := events.NewTripConsumer(rabbitmq, svc)
 	go func() {
 		if err := consumer.Listen(); err != nil {
 			log.Fatalf("Failed to listen to the message: %v", err)
@@ -71,7 +105,7 @@ func main() {
 
 	// Create the service and register the gRPC handler
 
-	grpcHandler.NewGrpcHandler(grpcServer, driverService)
+	grpcHandler.NewGrpcHandler(grpcServer, svc)
 
 	log.Printf("Starting gRPC server Driver service on port %s", lis.Addr().String())
 

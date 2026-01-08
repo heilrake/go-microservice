@@ -20,6 +20,14 @@ k8s_yaml('./infra/development/k8s/rabbitmq-deployment.yaml')
 k8s_resource('rabbitmq', port_forwards=['5672', '15672'], labels='tooling')
 ### End RabbitMQ ###
 
+### PostgreSQL Databases ###
+k8s_yaml('./infra/development/k8s/trip-postgres.yaml')
+k8s_resource('trip-postgres', port_forwards=['30432:5432'], labels='databases')
+
+k8s_yaml('./infra/development/k8s/driver-postgres.yaml')
+k8s_resource('driver-postgres', port_forwards=['30433:5432'], labels='databases')
+### End PostgreSQL Databases ###
+
 ### API Gateway ###
 
 gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway'
@@ -78,7 +86,7 @@ docker_build_with_restart(
 )
 
 k8s_yaml('./infra/development/k8s/trip-service-deployment.yaml')
-k8s_resource('trip-service', resource_deps=['trip-service-compile', 'rabbitmq'], labels="services")
+k8s_resource('trip-service', resource_deps=['trip-service-compile', 'rabbitmq', 'trip-postgres'], labels="services")
 
 ### End of Trip Service ###
 
@@ -109,7 +117,7 @@ docker_build_with_restart(
 )
 
 k8s_yaml('./infra/development/k8s/driver-service-deployment.yaml')
-k8s_resource('driver-service', resource_deps=['driver-service-compile', 'rabbitmq'], labels="services")
+k8s_resource('driver-service', resource_deps=['driver-service-compile', 'rabbitmq', 'driver-postgres'], labels="services")
 
 ### End of Driver Service ###
 
@@ -133,6 +141,7 @@ local_resource(
   labels=['frontend'],
 )
 ### End of Web Frontend ###
+
 
 ### Payment Service ###
 
@@ -170,3 +179,27 @@ k8s_resource('payment-service', resource_deps=['payment-service-compile', 'rabbi
 k8s_yaml('./infra/development/k8s/jaeger.yaml')
 k8s_resource('jaeger', port_forwards=['16686:16686', '14268:14268'], labels="tooling")
 ### End of Jaeger ###
+
+### Stripe Webhook Listener ###
+local_resource(
+  name='stripe-webhook',
+  serve_cmd='stripe listen --forward-to localhost:4242/webhook',
+  labels=['tooling'],
+)
+### End of Stripe Webhook Listener ###
+
+### Dev Info ###
+
+# Параметр	Значення
+# Host	localhost
+# Port	30432
+# Database	trip_db
+# Username	trip_user
+# Password	trip_password
+# 📦 Driver PostgreSQL
+# Параметр	Значення
+# Host	localhost
+# Port	30433
+# Database	driver_db
+# Username	driver_user
+# Password	driver_password

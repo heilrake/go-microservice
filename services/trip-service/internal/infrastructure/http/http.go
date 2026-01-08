@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"ride-sharing/services/trip-service/internal/service"
+	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/types"
 )
 
 type HttpHandler struct {
-	Service service.TripService
+	Service domain.TripService
 }
 
 type previewTripRequest struct {

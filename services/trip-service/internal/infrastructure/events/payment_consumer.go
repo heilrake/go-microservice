@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"ride-sharing/services/trip-service/internal/service"
+	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/messaging/consumers"
@@ -15,10 +15,10 @@ import (
 
 type paymentConsumer struct {
 	rabbitmq *messaging.RabbitMQ
-	service  service.TripService
+	service  domain.TripService
 }
 
-func NewPaymentConsumer(rabbitmq *messaging.RabbitMQ, service service.TripService) *paymentConsumer {
+func NewPaymentConsumer(rabbitmq *messaging.RabbitMQ, service domain.TripService) *paymentConsumer {
 	return &paymentConsumer{
 		rabbitmq: rabbitmq,
 		service:  service,

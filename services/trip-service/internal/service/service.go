@@ -17,22 +17,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type TripService interface {
-	CreateTrip(ctx context.Context, fare *domain.RideFareModel) (*domain.TripModel, error)
-	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error)
-	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel
-	GenerateTripFares(ctx context.Context, fares []*domain.RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*domain.RideFareModel, error)
-	GetAndValidateFare(ctx context.Context, fareID, userID string) (*domain.RideFareModel, error)
-	GetTripByID(ctx context.Context, id string) (*domain.TripModel, error)
-	UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error
-}
-
 type tripService struct {
 	repo repository.TripRepository
 }
 
 // NewTripServer wires a TripService with the given repository.
-func NewTripServer(r repository.TripRepository) TripService {
+func NewTripServer(r repository.TripRepository) domain.TripService {
 	return &tripService{
 		repo: r,
 	}

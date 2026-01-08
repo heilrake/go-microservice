@@ -14,11 +14,11 @@ import (
 	"ride-sharing/services/trip-service/internal/infrastructure/grpc"
 	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	service "ride-sharing/services/trip-service/internal/service"
-	"ride-sharing/services/trip-service/pkg/types"
 	sharedBootstrap "ride-sharing/shared/bootstrap"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	"ride-sharing/shared/tracing"
+	"ride-sharing/shared/types"
 
 	grpcserver "google.golang.org/grpc"
 )
