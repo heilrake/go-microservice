@@ -38,6 +38,15 @@ func main() {
 	defer cancel()
 	defer sh(ctx)
 
+	// Initialize shared gRPC clients (один раз при старті!)
+	app, err := InitializeClients()
+	if err != nil {
+		log.Fatalf("Failed to initialize gRPC clients: %v", err)
+	}
+	defer app.CloseAllClients()
+
+	log.Println("Initialized gRPC clients")
+
 	mux := http.NewServeMux()
 
 	// RabbitMQ connection
@@ -49,10 +58,10 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
-	// HTTP and WebSocket routes (explicit methods for Go 1.22+ patterns)
-	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(enableCORS(handleTripPreview), "handleTripPreview"))
-	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(enableCORS(handleUserCreation), "handleUserCreation"))
-	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(enableCORS(handleTripStart), "handleTripStart"))
+	// HTTP routes - передаємо app для доступу до shared clients
+	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(enableCORS(handleTripPreview(app)), "handleTripPreview"))
+	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(enableCORS(handleTripStart(app)), "handleTripStart"))
+	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(enableCORS(handleUserCreation(app)), "handleUserCreation"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
 	}, "/ws/drivers"))
@@ -63,7 +72,6 @@ func main() {
 	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)
 	}, "/webhook/stripe"))
-
 
 	server := &http.Server{
 		Addr:    httpAddr,

@@ -9,15 +9,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type driverServiceClient struct {
+// DriverServiceClient wraps the gRPC client connection
+type DriverServiceClient struct {
 	Client pb.DriverServiceClient
 	conn   *grpc.ClientConn
 }
 
-func NewDriverServiceClient() (*driverServiceClient, error) {
+func NewDriverServiceClient() (*DriverServiceClient, error) {
 	driverServiceURL := os.Getenv("DRIVER_SERVICE_URL")
 	if driverServiceURL == "" {
-		driverServiceURL = "localhost:9094"
+		driverServiceURL = "127.0.0.1:9094"
 	}
 
 	dialOptions := append(
@@ -30,13 +31,13 @@ func NewDriverServiceClient() (*driverServiceClient, error) {
 		return nil, err
 	}
 
-	return &driverServiceClient{
+	return &DriverServiceClient{
 		Client: pb.NewDriverServiceClient(conn),
 		conn:   conn,
 	}, nil
 }
 
-func (c *driverServiceClient) Close() {
+func (c *DriverServiceClient) Close() {
 	if c.conn != nil {
 		if err := c.conn.Close(); err != nil {
 			return

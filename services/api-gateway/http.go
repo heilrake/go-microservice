@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	grpc_client "ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
@@ -15,70 +14,64 @@ import (
 
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/webhook"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var tracer = tracing.GetTracer("api-gateway")
 
-func handleTripPreview(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "handleTripPreview")
-	defer span.End()
+func handleTripPreview(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleTripPreview")
+		defer span.End()
 
-	var requestBody previewTripRequest
+		var requestBody previewTripRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
-		return
+		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+			return
+		}
+
+		tripPreview, err := app.TripClient.Client.PreviewTrip(ctx, requestBody.toProto())
+		if err != nil {
+			log.Printf("Failed to preview a trip: %v", err)
+			http.Error(w, "Failed to preview trip", http.StatusInternalServerError)
+			return
+		}
+
+		response := contracts.APIResponse{Data: tripPreview}
+
+		fmt.Printf("response %v\n", response)
+
+		writeJson(w, http.StatusCreated, response)
 	}
-
-	tripService, err := grpc_client.NewTripServiceClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer tripService.Close()
-
-	tripPreview, err := tripService.Client.PreviewTrip(ctx, requestBody.toProto())
-	if err != nil {
-		log.Printf("Failed to preview a trip: %v", err)
-		http.Error(w, "Failed to preview trip", http.StatusInternalServerError)
-		return
-	}
-
-	response := contracts.APIResponse{Data: tripPreview}
-
-	fmt.Printf("response %v\n", response)
-
-	writeJson(w, http.StatusCreated, response)
 }
 
-func handleTripStart(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "handleTripStart")
-	defer span.End()
-	var requestBody startTripRequest
+func handleTripStart(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleTripStart")
+		defer span.End()
 
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
-		return
+		var requestBody startTripRequest
+
+		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+			return
+		}
+
+		tripStart, err := app.TripClient.Client.CreateTrip(ctx, requestBody.toProto())
+		if err != nil {
+			log.Printf("Failed to start a trip: %v", err)
+			http.Error(w, "Failed to start trip", http.StatusInternalServerError)
+			return
+		}
+
+		response := contracts.APIResponse{Data: tripStart}
+
+		fmt.Printf("response %v\n", response)
+
+		writeJson(w, http.StatusCreated, response)
 	}
-
-	tripService, err := grpc_client.NewTripServiceClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer tripService.Close()
-
-	tripStart, err := tripService.Client.CreateTrip(ctx, requestBody.toProto())
-	if err != nil {
-		log.Printf("Failed to start a trip: %v", err)
-		http.Error(w, "Failed to start trip", http.StatusInternalServerError)
-	}
-
-	response := contracts.APIResponse{Data: tripStart}
-
-	fmt.Printf("response %v\n", response)
-
-	writeJson(w, http.StatusCreated, response)
 }
 
 func handleStripeWebhook(w http.ResponseWriter, r *http.Request, rb *messaging.RabbitMQ) {
@@ -155,40 +148,41 @@ func handleStripeWebhook(w http.ResponseWriter, r *http.Request, rb *messaging.R
 	}
 }
 
-func handleUserCreation(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "handleUserCreation")
-	defer span.End()
+func handleUserCreation(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleUserCreation")
+		defer span.End()
 
-	var requestBody createUserRequest
+		var requestBody createUserRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
-		return
+		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+			return
+		}
+
+		user, err := app.UserClient.Client.CreateUser(ctx, &pb.CreateUserRequest{
+			Username: requestBody.Username,
+			Email:    requestBody.Email,
+			Password: requestBody.Password,
+		})
+		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				if s.Code() == codes.InvalidArgument {
+					http.Error(w, s.Message(), http.StatusBadRequest)
+					return
+				}
+			}
+			log.Printf("Failed to create user: %v", err)
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			return
+		}
+
+		response := contracts.APIResponse{Data: user}
+
+		fmt.Printf("response %v\n", response)
+
+		writeJson(w, http.StatusCreated, response)
 	}
-
-	userService, err := grpc_client.NewUserServiceClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer userService.Close()
-
-	user, err := userService.Client.CreateUser(ctx, &pb.CreateUserRequest{
-		Username: requestBody.Username,
-		Email:    requestBody.Email,
-		Password: requestBody.Password,
-	})
-	if err != nil {
-		log.Printf("Failed to create user: %v", err)
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
-		return
-	}
-
-	response := contracts.APIResponse{Data: user}
-
-	fmt.Printf("response %v\n", response)
-
-	writeJson(w, http.StatusCreated, response)
 }
 
 func writeJson(w http.ResponseWriter, status int, data any) error {

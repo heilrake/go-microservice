@@ -9,15 +9,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type userServiceClient struct {
+// UserServiceClient wraps the gRPC client connection
+type UserServiceClient struct {
 	Client pb.UserServiceClient
 	conn   *grpc.ClientConn
 }
 
-func NewUserServiceClient() (*userServiceClient, error) {
+func NewUserServiceClient() (*UserServiceClient, error) {
 	userServiceURL := os.Getenv("USER_SERVICE_URL")
 	if userServiceURL == "" {
-		userServiceURL = "localhost:9095"
+		userServiceURL = "127.0.0.1:9095"
 	}
 
 	dialOptions := append(
@@ -30,13 +31,13 @@ func NewUserServiceClient() (*userServiceClient, error) {
 		return nil, err
 	}
 
-	return &userServiceClient{
+	return &UserServiceClient{
 		Client: pb.NewUserServiceClient(conn),
 		conn:   conn,
 	}, nil
 }
 
-func (c *userServiceClient) Close() {
+func (c *UserServiceClient) Close() {
 	if c.conn != nil {
 		if err := c.conn.Close(); err != nil {
 			return
