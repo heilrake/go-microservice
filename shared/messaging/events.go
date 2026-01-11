@@ -3,6 +3,7 @@ package messaging
 import (
 	pbd "ride-sharing/shared/proto/driver"
 	pb "ride-sharing/shared/proto/trip"
+	pbu "ride-sharing/shared/proto/user"
 )
 
 const (
@@ -46,4 +47,8 @@ type PaymentStatusUpdateData struct {
 	TripID   string `json:"tripID"`
 	UserID   string `json:"userID"`
 	DriverID string `json:"driverID"`
+}
+
+type UserEventData struct {
+	User *pbu.User `json:"user"`
 }

@@ -29,4 +29,9 @@ const (
 
 	// Payment commands (payment.cmd.*)
 	PaymentCmdCreateSession = "payment.cmd.create_session"
+
+	// User events (user.event.*)
+	UserEventCreated = "user.event.created"
+	UserEventUpdated = "user.event.updated"
+	UserEventDeleted = "user.event.deleted"
 )

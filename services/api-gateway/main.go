@@ -51,6 +51,7 @@ func main() {
 
 	// HTTP and WebSocket routes (explicit methods for Go 1.22+ patterns)
 	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(enableCORS(handleTripPreview), "handleTripPreview"))
+	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(enableCORS(handleUserCreation), "handleUserCreation"))
 	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(enableCORS(handleTripStart), "handleTripStart"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
@@ -62,6 +63,7 @@ func main() {
 	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)
 	}, "/webhook/stripe"))
+
 
 	server := &http.Server{
 		Addr:    httpAddr,

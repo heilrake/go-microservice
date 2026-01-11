@@ -10,7 +10,6 @@ import (
 
 	driverInternal "ride-sharing/services/driver-service/internal"
 	"ride-sharing/services/driver-service/internal/events"
-	infrastructure "ride-sharing/services/driver-service/internal/infrastructure/db"
 	grpcHandler "ride-sharing/services/driver-service/internal/infrastructure/grpc"
 	"ride-sharing/services/driver-service/internal/infrastructure/repository"
 	"ride-sharing/services/driver-service/internal/service"
@@ -59,7 +58,7 @@ func main() {
 	}
 
 	// Initialize GORM database connection
-	gormDB := infrastructure.InitGorm(pgConfig)
+	gormDB := sharedBootstrap.InitGorm(pgConfig)
 	sqlDB, err := gormDB.DB()
 	if err != nil {
 		log.Fatalf("failed to get underlying sql.DB: %v", err)

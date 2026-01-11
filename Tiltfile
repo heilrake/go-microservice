@@ -121,6 +121,40 @@ k8s_resource('driver-service', resource_deps=['driver-service-compile', 'rabbitm
 
 ### End of Driver Service ###
 
+### User Service ###
+
+user_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/user-service ./services/user-service/cmd/main.go'
+if os.name == 'nt':
+  user_compile_cmd = './infra/development/docker/user-build.bat'
+
+local_resource(
+  'user-service-compile',
+  user_compile_cmd,
+  deps=['./services/user-service', './shared'], labels="compiles")
+
+docker_build_with_restart(
+  'ride-sharing/user-service',
+  '.',
+  entrypoint=['/app/build/user-service'],
+  dockerfile='./infra/development/docker/user-service.Dockerfile',
+  only=[
+    './build/user-service',
+    './shared',
+  ],
+  live_update=[
+    sync('./build', '/app/build'),
+    sync('./shared', '/app/shared'),
+  ],
+)
+
+k8s_yaml('./infra/development/k8s/user-postgres.yaml')
+k8s_resource('user-postgres', port_forwards=['30434:5432'], labels='databases')
+
+k8s_yaml('./infra/development/k8s/user-service-deployment.yaml')
+k8s_resource('user-service', resource_deps=['user-service-compile', 'rabbitmq', 'user-postgres'], labels="services")
+
+### End of User Service ###
+
 
 ### Web Frontend ###
 
@@ -190,16 +224,23 @@ local_resource(
 
 ### Dev Info ###
 
-# Параметр	Значення
-# Host	localhost
-# Port	30432
-# Database	trip_db
-# Username	trip_user
-# Password	trip_password
+# 📦 Trip PostgreSQL
+# Host: localhost
+# Port: 30432
+# Database: trip_db
+# Username: trip_user
+# Password: trip_password
+
 # 📦 Driver PostgreSQL
-# Параметр	Значення
-# Host	localhost
-# Port	30433
-# Database	driver_db
-# Username	driver_user
-# Password	driver_password
+# Host: localhost
+# Port: 30433
+# Database: driver_db
+# Username: driver_user
+# Password: driver_password
+
+# 📦 User PostgreSQL
+# Host: localhost
+# Port: 30434
+# Database: user_db
+# Username: user_user
+# Password: user_password

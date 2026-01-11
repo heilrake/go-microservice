@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	tripinternal "ride-sharing/services/trip-service/internal"
-	"ride-sharing/services/trip-service/internal/infrastructure/events"
-	"ride-sharing/services/trip-service/internal/infrastructure/grpc"
-	"ride-sharing/services/trip-service/internal/infrastructure/repository"
-	service "ride-sharing/services/trip-service/internal/service"
+	userInternal "ride-sharing/services/user-service/internal"
+	"ride-sharing/services/user-service/internal/infrastructure/events"
+	grpcHandler "ride-sharing/services/user-service/internal/infrastructure/grpc"
+	"ride-sharing/services/user-service/internal/infrastructure/repository"
+	"ride-sharing/services/user-service/internal/service"
 	sharedBootstrap "ride-sharing/shared/bootstrap"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
@@ -22,15 +22,16 @@ import (
 	grpcserver "google.golang.org/grpc"
 )
 
-var GrpcAddr string = ":9093"
+var GrpcAddr string = ":9095"
 
 func main() {
 	// Initialize Tracing
 	tracerCfg := tracing.Config{
-		ServiceName:    "trip-service",
+		ServiceName:    "user-service",
 		Environment:    env.GetString("ENVIRONMENT", "development"),
 		JaegerEndpoint: env.GetString("OTEL_ENDPOINT", "jaeger:4318"),
 	}
+
 	sh, err := tracing.InitTracer(tracerCfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize the tracer: %v", err)
@@ -40,17 +41,17 @@ func main() {
 
 	// Initialize PostgreSQL config
 	pgConfig := &types.PostgresConfig{
-		DSN:      env.GetString("DATABASE_URL", "postgres://trip_user:trip_password@trip-postgres:5432/trip_db?sslmode=disable"),
+		DSN:      env.GetString("DATABASE_URL", "postgres://user_user:user_password@user-postgres:5432/user_db?sslmode=disable"),
 		MaxConns: int32(env.GetInt("DB_MAX_CONNS", 10)),
 		MinConns: int32(env.GetInt("DB_MIN_CONNS", 2)),
 	}
 
 	// Run migrations on startup
 	err = sharedBootstrap.RunMigrator(sharedBootstrap.MigratorConfig{
-		MigrationsFS:  tripinternal.Migrations,
+		MigrationsFS:  userInternal.Migrations,
 		MigrationsDir: "migrations",
 		DatabaseURL:   pgConfig.DSN,
-		ServiceName:   "trip-service",
+		ServiceName:   "user-service",
 	})
 	if err != nil {
 		log.Fatalf("migration failed: %v", err)
@@ -66,7 +67,7 @@ func main() {
 
 	// Initialize PostgreSQL repository with GORM
 	repo := repository.NewPostgresRepository(gormDB)
-	svc := service.NewTripServer(repo)
+	svc := service.NewUserService(repo)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -93,23 +94,14 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
-	if err := rabbitmq.DeclareExchanges(); err != nil {
-		log.Fatalf("Failed to declare exchanges: %v", err)
-	}
+	// Initialize event publisher
+	publisher := events.NewUserEventPublisher(rabbitmq)
 
-	publisher := events.NewTripEventPublisher(rabbitmq)
-
-	driverConsumer := events.NewDriverConsumer(rabbitmq, svc)
-	go func() {
-		if err := driverConsumer.Listen(); err != nil {
-			log.Fatalf("Failed to listen to driver messages: %v", err)
-		}
-	}()
-
+	// Create gRPC server with tracing
 	grpcServer := grpcserver.NewServer(tracing.WithTracingInterceptors()...)
-	grpc.NewGRPCHandler(grpcServer, svc, publisher)
+	grpcHandler.NewGrpcHandler(grpcServer, svc, publisher)
 
-	log.Printf("Starting gRPC server Trip service on port %s", lis.Addr().String())
+	log.Printf("Starting gRPC server User service on port %s", lis.Addr().String())
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
@@ -118,7 +110,7 @@ func main() {
 		}
 	}()
 
-	// wait for the shutdown signal
+	// Wait for shutdown signal
 	<-ctx.Done()
 	log.Println("Shutting down the server...")
 	grpcServer.GracefulStop()

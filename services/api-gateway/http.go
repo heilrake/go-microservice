@@ -10,6 +10,7 @@ import (
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
+	pb "ride-sharing/shared/proto/user"
 	"ride-sharing/shared/tracing"
 
 	"github.com/stripe/stripe-go/v81"
@@ -152,6 +153,42 @@ func handleStripeWebhook(w http.ResponseWriter, r *http.Request, rb *messaging.R
 			return
 		}
 	}
+}
+
+func handleUserCreation(w http.ResponseWriter, r *http.Request) {
+	ctx, span := tracer.Start(r.Context(), "handleUserCreation")
+	defer span.End()
+
+	var requestBody createUserRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
+
+	userService, err := grpc_client.NewUserServiceClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer userService.Close()
+
+	user, err := userService.Client.CreateUser(ctx, &pb.CreateUserRequest{
+		Username: requestBody.Username,
+		Email:    requestBody.Email,
+		Password: requestBody.Password,
+	})
+	if err != nil {
+		log.Printf("Failed to create user: %v", err)
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
+
+	response := contracts.APIResponse{Data: user}
+
+	fmt.Printf("response %v\n", response)
+
+	writeJson(w, http.StatusCreated, response)
 }
 
 func writeJson(w http.ResponseWriter, status int, data any) error {
