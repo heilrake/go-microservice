@@ -37,9 +37,6 @@ function HomeContent() {
   const payment = searchParams.get("payment")
   const [packageSlug, setPackageSlug] = useState<CarPackageSlugType | null>(null)
 
-  const handleClick = (userType: "driver" | "rider") => {
-    setUserType(userType)
-  }
 
   if (payment === 'success') {
     return (
@@ -78,14 +75,14 @@ function HomeContent() {
             <div className="space-y-4">
               <Button
                 className="w-full text-lg py-6 bg-primary hover:bg-primary/90"
-                onClick={() => handleClick("rider")}
+                onClick={() => router.push("/auth/rider/login")}
               >
                 I Need a Ride
               </Button>
               <Button
                 className="w-full text-lg py-6"
                 variant="outline"
-                onClick={() => handleClick("driver")}
+                onClick={() => router.push("/auth/driver/login")}
               >
                 I Want to Drive
               </Button>

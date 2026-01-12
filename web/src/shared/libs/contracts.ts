@@ -8,6 +8,8 @@ export const BackendEndpoints = {
   START_TRIP: "/trip/start",
   WS_DRIVERS: "/drivers",
   WS_RIDERS: "/riders",
+  RIDER_LOGIN: "/rider/login",
+  DRIVER_LOGIN: "/driver/login",
 } as const;
 
 export const TripEvents = {
@@ -102,6 +104,36 @@ export type HTTPTripPreviewRequestPayload = {
   userID: string;
   pickup: Coordinate;
   destination: Coordinate;
+}
+
+export type HTTPUserLoginRequestPayload = {
+  email: string;
+  password: string;
+}
+
+export type HTTPUserLoginResponse = {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    profile_picture?: string;
+  };
+  token?: string; // If using JWT tokens
+}
+
+export type HTTPDriverLoginRequestPayload = {
+  email: string;
+  password: string;
+}
+
+export type HTTPDriverLoginResponse = {
+  driver: {
+    id: string;
+    name: string;
+    email: string;
+    profile_picture?: string;
+  };
+  token?: string; // If using JWT tokens
 }
 
 export function isValidTripEvent(event: string): event is TripEventType {
