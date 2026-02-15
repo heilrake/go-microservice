@@ -27,6 +27,7 @@ func (r *postgresRepository) Create(ctx context.Context, user *domain.User) erro
 		Email:          user.Email,
 		Password:       user.Password,
 		ProfilePicture: user.ProfilePicture,
+		Role:           user.Role,
 	}
 
 	if err := r.db.WithContext(ctx).Create(dbUser).Error; err != nil {
@@ -49,6 +50,24 @@ func (r *postgresRepository) GetByID(ctx context.Context, id string) (*domain.Us
 		Email:          dbUser.Email,
 		Password:       dbUser.Password,
 		ProfilePicture: dbUser.ProfilePicture,
+		Role:           dbUser.Role,
+	}, nil
+}
+
+func (r *postgresRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var dbUser db.UserModel
+
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&dbUser).Error; err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return &domain.User{
+		ID:             dbUser.ID,
+		Username:       dbUser.Username,
+		Email:          dbUser.Email,
+		Password:       dbUser.Password,
+		ProfilePicture: dbUser.ProfilePicture,
+		Role:           dbUser.Role,
 	}, nil
 }
 

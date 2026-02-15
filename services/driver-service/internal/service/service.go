@@ -38,6 +38,7 @@ func (s *driverService) UnregisterDriver(ctx context.Context, driverID string) e
 
 func (s *driverService) FindAvailableDrivers(ctx context.Context, packageType string) ([]*infrastructure.DriverModel, error) {
 	drivers, err := s.repo.FindAvailableDrivers(ctx, packageType)
+	fmt.Printf("drivers %v\n", drivers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find available drivers: %w", err)
 	}

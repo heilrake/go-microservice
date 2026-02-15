@@ -40,12 +40,13 @@ func (h *userGrpcHandler) GetUser(ctx context.Context, req *pb.GetUserRequest) (
 			Username:       user.Username,
 			Email:          user.Email,
 			ProfilePicture: user.ProfilePicture,
+			Role:           user.Role,
 		},
 	}, nil
 }
 
 func (h *userGrpcHandler) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	user, err := h.service.CreateUser(ctx, req.GetUsername(), req.GetEmail(), req.GetPassword(), req.GetProfilePicture())
+	user, err := h.service.CreateUser(ctx, req.GetUsername(), req.GetEmail(), req.GetPassword(), req.GetProfilePicture(), req.GetRole())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
@@ -62,6 +63,24 @@ func (h *userGrpcHandler) CreateUser(ctx context.Context, req *pb.CreateUserRequ
 			Username:       user.Username,
 			Email:          user.Email,
 			ProfilePicture: user.ProfilePicture,
+			Role:           user.Role,
+		},
+	}, nil
+}
+
+func (h *userGrpcHandler) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	user, err := h.service.LoginUser(ctx, req.GetEmail(), req.GetPassword(), req.GetRole())
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials")
+	}
+
+	return &pb.LoginUserResponse{
+		User: &pb.User{
+			Id:             user.ID,
+			Username:       user.Username,
+			Email:          user.Email,
+			ProfilePicture: user.ProfilePicture,
+			Role:           user.Role,
 		},
 	}, nil
 }
@@ -95,6 +114,7 @@ func (h *userGrpcHandler) UpdateUser(ctx context.Context, req *pb.UpdateUserRequ
 			Username:       user.Username,
 			Email:          user.Email,
 			ProfilePicture: user.ProfilePicture,
+			Role:           user.Role,
 		},
 	}, nil
 }

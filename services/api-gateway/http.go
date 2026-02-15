@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -160,10 +161,19 @@ func handleUserCreation(app *Clients) http.HandlerFunc {
 			return
 		}
 
+		role := requestBody.Role
+		if role == "" {
+			role = "rider"
+		}
+		if role != "rider" && role != "driver" {
+			http.Error(w, "invalid role: must be rider or driver", http.StatusBadRequest)
+			return
+		}
 		user, err := app.UserClient.Client.CreateUser(ctx, &pb.CreateUserRequest{
 			Username: requestBody.Username,
 			Email:    requestBody.Email,
 			Password: requestBody.Password,
+			Role:     role,
 		})
 		if err != nil {
 			if s, ok := status.FromError(err); ok {
@@ -179,9 +189,43 @@ func handleUserCreation(app *Clients) http.HandlerFunc {
 
 		response := contracts.APIResponse{Data: user}
 
-		fmt.Printf("response %v\n", response)
-
 		writeJson(w, http.StatusCreated, response)
+	}
+}
+
+// proxyLogin проксує запит на auth-service (rider -> /user/login, driver -> /driver/login).
+func proxyLogin(authPath string) http.HandlerFunc {
+	authBase := env.GetString("AUTH_SERVICE_URL", "http://127.0.0.1:8082")
+	targetURL := authBase + authPath
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "failed to read body", http.StatusBadRequest)
+			return
+		}
+		proxyReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, targetURL, bytes.NewReader(body))
+		if err != nil {
+			log.Printf("proxyLogin: NewRequest: %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		proxyReq.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(proxyReq)
+		if err != nil {
+			log.Printf("proxyLogin: Do %s: %v", targetURL, err)
+			http.Error(w, "auth service unavailable", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.StatusCode)
+		if _, err := io.Copy(w, resp.Body); err != nil {
+			log.Printf("proxyLogin: Copy: %v", err)
+		}
 	}
 }
 

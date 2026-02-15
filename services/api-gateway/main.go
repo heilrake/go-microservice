@@ -58,24 +58,25 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
-	// HTTP routes - передаємо app для доступу до shared clients
-	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(enableCORS(handleTripPreview(app)), "handleTripPreview"))
-	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(enableCORS(handleTripStart(app)), "handleTripStart"))
-	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(enableCORS(handleUserCreation(app)), "handleUserCreation"))
+	// HTTP routes
+	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(handleTripPreview(app), "handleTripPreview"))
+	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(handleTripStart(app), "handleTripStart"))
+	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(handleUserCreation(app), "handleUserCreation"))
+	mux.Handle("POST /rider/login", tracing.WrapHandlerFunc(proxyLogin("/user/login"), "proxyRiderLogin"))
+	mux.Handle("POST /driver/login", tracing.WrapHandlerFunc((proxyLogin("/driver/login")), "proxyDriverLogin"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
 	}, "/ws/drivers"))
 	mux.Handle("/ws/riders", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleRiderWebSocket(w, r, rabbitmq)
 	}, "/ws/riders"))
-
 	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)
 	}, "/webhook/stripe"))
 
 	server := &http.Server{
 		Addr:    httpAddr,
-		Handler: mux,
+		Handler: enableCORS(mux),
 	}
 
 	serverErrors := make(chan error, 1)

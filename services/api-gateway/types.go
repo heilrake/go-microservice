@@ -41,4 +41,5 @@ type createUserRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"` // "rider" | "driver" — required
 }

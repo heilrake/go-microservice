@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: ride-sharing/auth-service
+          ports:
+            - containerPort: 8082
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '100m'
+            limits:
+              memory: '128Mi'
+              cpu: '200m'
+          env:
+            - name: USER_SERVICE_URL
+              value: 'user-service:9095'
+            - name: RABBITMQ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: uri
+            - name: OTEL_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: OTEL_ENDPOINT
+                  name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 8082
+      name: http
+      targetPort: 8082
+  type: ClusterIP

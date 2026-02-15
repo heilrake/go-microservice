@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { API_URL } from "@/shared/libs/constants"
-import type { HTTPDriverLoginRequestPayload, HTTPDriverLoginResponse } from "@/shared/libs/contracts"
+import type { HTTPUserLoginRequestPayload, HTTPUserLoginResponse } from "@/shared/libs/contracts"
 import { BackendEndpoints } from "@/shared/libs/contracts"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
@@ -30,9 +30,9 @@ export function RiderLoginForm() {
   
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const payload: HTTPDriverLoginRequestPayload = data
+      const payload: HTTPUserLoginRequestPayload = data
 
-      const response = await fetch(`${API_URL}${BackendEndpoints.DRIVER_LOGIN}`, {
+      const response = await fetch(`${API_URL}${BackendEndpoints.RIDER_LOGIN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -49,15 +49,15 @@ export function RiderLoginForm() {
         throw new Error(message)
       }
 
-      const json = (await response.json()) as { data: HTTPDriverLoginResponse }
-      const { driver, token } = json.data
+      const json = (await response.json()) as { data: HTTPUserLoginResponse }
+      const { user, token } = json.data
 
-      localStorage.setItem("driverID", driver.id)
+      localStorage.setItem("userID", user.id)
       if (token) {
         localStorage.setItem("authToken", token)
       }
 
-      router.push("/drive")
+      router.push("/ride")
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Не вдалося увійти"
@@ -128,7 +128,7 @@ export function RiderLoginForm() {
             Don&apos;t have an account?{" "}
             <button
               type="button"
-              onClick={() => router.push("/auth/driver/register")}
+              onClick={() => router.push("/auth/user/register")}
               className="text-primary hover:underline font-medium"
             >
               Sign up

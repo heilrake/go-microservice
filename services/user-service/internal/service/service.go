@@ -20,7 +20,10 @@ func NewUserService(r domain.UserRepository) domain.UserService {
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, username, email, password, profilePicture string) (*domain.User, error) {
+func (s *userService) CreateUser(ctx context.Context, username, email, password, profilePicture, role string) (*domain.User, error) {
+	if role != "rider" && role != "driver" {
+		return nil, fmt.Errorf("invalid role: must be rider or driver")
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
@@ -32,6 +35,7 @@ func (s *userService) CreateUser(ctx context.Context, username, email, password,
 		Email:          email,
 		Password:       string(hashedPassword),
 		ProfilePicture: profilePicture,
+		Role:           role,
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
@@ -47,6 +51,26 @@ func (s *userService) GetUser(ctx context.Context, id string) (*domain.User, err
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	return user, nil
+}
+
+func (s *userService) LoginUser(ctx context.Context, email, password, role string) (*domain.User, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
+
+	if err != nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	if role != "" && user.Role != role {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Don't return password to caller
+	user.Password = ""
 	return user, nil
 }
 

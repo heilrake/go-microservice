@@ -138,10 +138,11 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   }
 
   const handleCancelTrip = () => {
-    setTrip(null)
-    setDestination(null)
+    // setTrip(null)
+    // setDestination(null)
     resetTripStatus()
   }
+
 
   if (error) {
     return <div>Error: {error}</div>

@@ -37,6 +37,8 @@ spec:
               value: 'driver-service:9094'
             - name: USER_SERVICE_URL
               value: 'user-service:9095'
+            - name: AUTH_SERVICE_URL
+              value: 'http://auth-service:8082'
             - name: OTEL_ENDPOINT
               valueFrom:
                 configMapKeyRef:
