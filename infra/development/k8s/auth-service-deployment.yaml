@@ -27,6 +27,16 @@ spec:
           env:
             - name: USER_SERVICE_URL
               value: 'user-service:9095'
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: google-oauth
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: google-oauth
+                  key: GOOGLE_CLIENT_SECRET
             - name: RABBITMQ_URI
               valueFrom:
                 secretKeyRef:
@@ -37,6 +47,11 @@ spec:
                 configMapKeyRef:
                   key: OTEL_ENDPOINT
                   name: app-config
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
 ---
 apiVersion: v1
 kind: Service

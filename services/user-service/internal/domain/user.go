@@ -16,6 +16,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, username, email, password, profilePicture, role string) (*User, error)
 	GetUser(ctx context.Context, id string) (*User, error)
 	LoginUser(ctx context.Context, email, password, role string) (*User, error)
+	GetOrCreateUserByOAuth(ctx context.Context, email, username, profilePicture, role string) (*User, error)
 	UpdateUser(ctx context.Context, id string, username, email, profilePicture *string) (*User, error)
 	DeleteUser(ctx context.Context, id string) error
 }

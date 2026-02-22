@@ -1,5 +1,5 @@
-import { DriverLoginForm } from "@/features/auth"
+import { LoginForm } from "@/features/auth/ui/login-form"
 
 export default function DriverLoginPage() {
-  return <DriverLoginForm />
+  return <LoginForm role="driver" />
 }

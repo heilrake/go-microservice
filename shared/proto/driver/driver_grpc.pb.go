@@ -19,6 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	DriverService_CreateDriver_FullMethodName     = "/driver.DriverService/CreateDriver"
+	DriverService_CreateCar_FullMethodName        = "/driver.DriverService/CreateCar"
+	DriverService_ListCars_FullMethodName         = "/driver.DriverService/ListCars"
 	DriverService_RegisterDriver_FullMethodName   = "/driver.DriverService/RegisterDriver"
 	DriverService_UnRegisterDriver_FullMethodName = "/driver.DriverService/UnRegisterDriver"
 )
@@ -27,6 +30,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DriverServiceClient interface {
+	CreateDriver(ctx context.Context, in *CreateDriverRequest, opts ...grpc.CallOption) (*CreateDriverResponse, error)
+	CreateCar(ctx context.Context, in *CreateCarRequest, opts ...grpc.CallOption) (*CreateCarResponse, error)
+	ListCars(ctx context.Context, in *ListCarsRequest, opts ...grpc.CallOption) (*ListCarsResponse, error)
 	RegisterDriver(ctx context.Context, in *RegisterDriverRequest, opts ...grpc.CallOption) (*RegisterDriverResponse, error)
 	UnRegisterDriver(ctx context.Context, in *RegisterDriverRequest, opts ...grpc.CallOption) (*RegisterDriverResponse, error)
 }
@@ -37,6 +43,36 @@ type driverServiceClient struct {
 
 func NewDriverServiceClient(cc grpc.ClientConnInterface) DriverServiceClient {
 	return &driverServiceClient{cc}
+}
+
+func (c *driverServiceClient) CreateDriver(ctx context.Context, in *CreateDriverRequest, opts ...grpc.CallOption) (*CreateDriverResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateDriverResponse)
+	err := c.cc.Invoke(ctx, DriverService_CreateDriver_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) CreateCar(ctx context.Context, in *CreateCarRequest, opts ...grpc.CallOption) (*CreateCarResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateCarResponse)
+	err := c.cc.Invoke(ctx, DriverService_CreateCar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) ListCars(ctx context.Context, in *ListCarsRequest, opts ...grpc.CallOption) (*ListCarsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCarsResponse)
+	err := c.cc.Invoke(ctx, DriverService_ListCars_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *driverServiceClient) RegisterDriver(ctx context.Context, in *RegisterDriverRequest, opts ...grpc.CallOption) (*RegisterDriverResponse, error) {
@@ -63,6 +99,9 @@ func (c *driverServiceClient) UnRegisterDriver(ctx context.Context, in *Register
 // All implementations must embed UnimplementedDriverServiceServer
 // for forward compatibility.
 type DriverServiceServer interface {
+	CreateDriver(context.Context, *CreateDriverRequest) (*CreateDriverResponse, error)
+	CreateCar(context.Context, *CreateCarRequest) (*CreateCarResponse, error)
+	ListCars(context.Context, *ListCarsRequest) (*ListCarsResponse, error)
 	RegisterDriver(context.Context, *RegisterDriverRequest) (*RegisterDriverResponse, error)
 	UnRegisterDriver(context.Context, *RegisterDriverRequest) (*RegisterDriverResponse, error)
 	mustEmbedUnimplementedDriverServiceServer()
@@ -75,6 +114,15 @@ type DriverServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDriverServiceServer struct{}
 
+func (UnimplementedDriverServiceServer) CreateDriver(context.Context, *CreateDriverRequest) (*CreateDriverResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateDriver not implemented")
+}
+func (UnimplementedDriverServiceServer) CreateCar(context.Context, *CreateCarRequest) (*CreateCarResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateCar not implemented")
+}
+func (UnimplementedDriverServiceServer) ListCars(context.Context, *ListCarsRequest) (*ListCarsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListCars not implemented")
+}
 func (UnimplementedDriverServiceServer) RegisterDriver(context.Context, *RegisterDriverRequest) (*RegisterDriverResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterDriver not implemented")
 }
@@ -100,6 +148,60 @@ func RegisterDriverServiceServer(s grpc.ServiceRegistrar, srv DriverServiceServe
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&DriverService_ServiceDesc, srv)
+}
+
+func _DriverService_CreateDriver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDriverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).CreateDriver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_CreateDriver_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).CreateDriver(ctx, req.(*CreateDriverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_CreateCar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).CreateCar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_CreateCar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).CreateCar(ctx, req.(*CreateCarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_ListCars_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCarsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).ListCars(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_ListCars_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).ListCars(ctx, req.(*ListCarsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _DriverService_RegisterDriver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -145,6 +247,18 @@ var DriverService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "driver.DriverService",
 	HandlerType: (*DriverServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateDriver",
+			Handler:    _DriverService_CreateDriver_Handler,
+		},
+		{
+			MethodName: "CreateCar",
+			Handler:    _DriverService_CreateCar_Handler,
+		},
+		{
+			MethodName: "ListCars",
+			Handler:    _DriverService_ListCars_Handler,
+		},
 		{
 			MethodName: "RegisterDriver",
 			Handler:    _DriverService_RegisterDriver_Handler,

@@ -9,6 +9,7 @@ service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+  rpc GetOrCreateUserByOAuth(GetOrCreateUserByOAuthRequest) returns (GetOrCreateUserByOAuthResponse);
 }
 
 message User {
@@ -57,5 +58,16 @@ message LoginUserRequest {
 }
 
 message LoginUserResponse {
+  User user = 1;
+}
+
+message GetOrCreateUserByOAuthRequest {
+  string email = 1;
+  string username = 2;
+  string profile_picture = 3;
+  string role = 4;  // "rider" | "driver"
+}
+
+message GetOrCreateUserByOAuthResponse {
   User user = 1;
 }

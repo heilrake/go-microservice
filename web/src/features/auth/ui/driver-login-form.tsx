@@ -1,19 +1,22 @@
-"use client"
+'use client';
 
-import { useForm } from "react-hook-form"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import { API_URL } from "@/shared/libs/constants"
-import type { HTTPDriverLoginRequestPayload, HTTPDriverLoginResponse } from "@/shared/libs/contracts"
-import { BackendEndpoints } from "@/shared/libs/contracts"
-import { Button } from "@/shared/ui/button"
-import { Input } from "@/shared/ui/input"
+import { API_URL } from '@/shared/libs/constants';
+import type {
+  HTTPDriverLoginRequestPayload,
+  HTTPDriverLoginResponse,
+} from '@/shared/libs/contracts';
+import { BackendEndpoints } from '@/shared/libs/contracts';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
 
-import { type LoginFormData, loginSchema } from "../model/schema"
+import { type LoginFormData, loginSchema } from '../model/schema';
 
 export function DriverLoginForm() {
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     register,
@@ -23,48 +26,71 @@ export function DriverLoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
-  })
-  
+  });
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const payload: HTTPDriverLoginRequestPayload = data
+      const payload: HTTPDriverLoginRequestPayload = data;
 
       const response = await fetch(`${API_URL}${BackendEndpoints.DRIVER_LOGIN}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      })
+      });
 
       if (!response.ok) {
-        let message = `Помилка: ${response.status}`
+        let message = `Помилка: ${response.status}`;
         try {
-          const errorData = await response.json()
-          message = errorData.message || message
+          const errorData = await response.json();
+          message = errorData.message || message;
         } catch {
           // не вдалося розпарсити → залишиться статус
         }
-        throw new Error(message)
+        throw new Error(message);
       }
 
-      const json = (await response.json()) as { data: HTTPDriverLoginResponse }
-      const { driver, token } = json.data
+      const json = (await response.json()) as { data: HTTPDriverLoginResponse };
+      const { driver, token } = json.data;
 
-      localStorage.setItem("driverID", driver.id)
+      localStorage.setItem('driverID', driver.id);
       if (token) {
-        localStorage.setItem("authToken", token)
+        localStorage.setItem('authToken', token);
       }
 
-      router.push("/drive")
+      router.push('/drive');
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Не вдалося увійти"
+      const message = err instanceof Error ? err.message : 'Не вдалося увійти';
 
-      setError("root", { message })
+      setError('root', { message });
     }
-  }
+  };
+  const handleOAuthLogin = (provider: 'google' | 'facebook') => {
+    const redirectUri = `${window.location.origin}/auth/callback?provider=${provider}`;
+    let oauthUrl = '';
+
+    if (provider === 'google') {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const scope = 'openid email profile';
+      oauthUrl =
+        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code&scope=${encodeURIComponent(scope)}&prompt=consent`;
+    }
+
+    if (provider === 'facebook') {
+      const clientId = process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID;
+      oauthUrl =
+        `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code&scope=email,public_profile`;
+    }
+
+    window.location.href = oauthUrl;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex items-center justify-center px-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
@@ -83,12 +109,10 @@ export function DriverLoginForm() {
               type="email"
               autoComplete="email"
               placeholder="your@email.com"
-              {...register("email")}
+              {...register('email')}
               // className={errors.email ? "border-red-500" : ""}
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
           </div>
 
           <div>
@@ -100,7 +124,7 @@ export function DriverLoginForm() {
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
-              {...register("password")}
+              {...register('password')}
               // className={errors.password ? "border-red-500" : ""}
             />
             {errors.password && (
@@ -114,23 +138,35 @@ export function DriverLoginForm() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full text-lg py-6"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full text-lg py-6" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
+        <div className="mt-6">
+          <p className="text-center text-sm text-gray-500 mb-2">Or sign in with</p>
+          <div className="flex justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => handleOAuthLogin('google')}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOAuthLogin('facebook')}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              Facebook
+            </button>
+          </div>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <button
               type="button"
-              onClick={() => router.push("/auth/driver/register")}
-              className="text-primary hover:underline font-medium"
-            >
+              onClick={() => router.push('/auth/driver/register')}
+              className="text-primary hover:underline font-medium">
               Sign up
             </button>
           </p>
@@ -139,13 +175,12 @@ export function DriverLoginForm() {
         <div className="mt-4 text-center">
           <button
             type="button"
-            onClick={() => router.push("/")}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
+            onClick={() => router.push('/')}
+            className="text-sm text-gray-500 hover:text-gray-700">
             ← Back to home
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

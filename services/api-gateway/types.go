@@ -43,3 +43,13 @@ type createUserRequest struct {
 	Password string `json:"password"`
 	Role     string `json:"role"` // "rider" | "driver" — required
 }
+
+type createDriverRequest struct {
+	Name           string `json:"name"`
+	ProfilePicture string `json:"profile_picture"`
+}
+
+type createCarRequest struct {
+	CarPlate    string `json:"car_plate"`
+	PackageSlug string `json:"package_slug"`
+}

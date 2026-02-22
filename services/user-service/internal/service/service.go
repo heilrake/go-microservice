@@ -74,6 +74,25 @@ func (s *userService) LoginUser(ctx context.Context, email, password, role strin
 	return user, nil
 }
 
+func (s *userService) GetOrCreateUserByOAuth(ctx context.Context, email, username, profilePicture, role string) (*domain.User, error) {
+	if role != "rider" && role != "driver" {
+		return nil, fmt.Errorf("invalid role: must be rider or driver")
+	}
+	// Try to find existing user by email
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err == nil {
+		user.Password = ""
+		return user, nil
+	}
+	// Create new OAuth user with unguessable placeholder (can't use email/password login)
+	oauthPlaceholder := "oauth-" + uuid.New().String()
+	user, err = s.CreateUser(ctx, username, email, oauthPlaceholder, profilePicture, role)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (s *userService) UpdateUser(ctx context.Context, id string, username, email, profilePicture *string) (*domain.User, error) {
 	user := &domain.User{ID: id}
 

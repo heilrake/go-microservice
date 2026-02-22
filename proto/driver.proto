@@ -5,13 +5,53 @@ package driver;
 option go_package = "shared/proto/driver;driver";
 
 service DriverService {
+   rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);
+   rpc CreateCar(CreateCarRequest) returns (CreateCarResponse);
+   rpc ListCars(ListCarsRequest) returns (ListCarsResponse);
    rpc RegisterDriver(RegisterDriverRequest) returns (RegisterDriverResponse);
    rpc UnRegisterDriver(RegisterDriverRequest) returns (RegisterDriverResponse);
 }
 
+message CreateDriverRequest {
+   string user_id = 1;
+   string name = 2;
+   string profile_picture = 3;
+}
+
+message CreateDriverResponse {
+   Driver driver = 1;
+}
+
+message CreateCarRequest {
+   string user_id = 1;    // look up driver by user_id
+   string car_plate = 2;
+   string package_slug = 3;
+}
+
+message CreateCarResponse {
+   Car car = 1;
+}
+
+message ListCarsRequest {
+   string user_id = 1;    // look up driver by user_id
+}
+
+message ListCarsResponse {
+   repeated Car cars = 1;
+}
+
+message Car {
+   string id = 1;
+   string driver_id = 2;
+   string car_plate = 3;
+   string package_slug = 4;
+}
+
 message RegisterDriverRequest {
-   string driverID = 1;
-   string packageSlug = 2;
+   string driverID = 1;   // user_id
+   string car_id = 2;     // which car to use
+   double latitude = 3;
+   double longitude = 4;
 }
 
 message RegisterDriverResponse {
@@ -20,12 +60,13 @@ message RegisterDriverResponse {
 
 message Driver {
    string id = 1;
-   string name = 2;
-   string profilePicture = 3;
-   string carPlate = 4; 
-   string geohash = 5;
-   string packageSlug = 6;
-   Location location = 7;
+   string user_id = 2;
+   string name = 3;
+   string profilePicture = 4;
+   string carPlate = 5;   // from current car when available
+   string geohash = 6;
+   string packageSlug = 7; // from current car when available
+   Location location = 8;
 }
 
 message Location {

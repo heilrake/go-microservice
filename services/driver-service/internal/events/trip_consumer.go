@@ -90,9 +90,9 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 		return err
 	}
 
-	// Notify the driver about a potential trip
+	// Notify the driver about a potential trip (OwnerID = user_id for WebSocket routing)
 	if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.DriverCmdTripRequest, contracts.AmqpMessage{
-		OwnerID: suitableDriver.ID,
+		OwnerID: suitableDriver.UserID,
 		Data:    marshalledEvent,
 	}); err != nil {
 		log.Printf("Failed to publish message to exchange: %v", err)

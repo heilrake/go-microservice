@@ -38,7 +38,7 @@ func main() {
 	defer cancel()
 	defer sh(ctx)
 
-	// Initialize shared gRPC clients (один раз при старті!)
+	// Initialize shared gRPC clients
 	app, err := InitializeClients()
 	if err != nil {
 		log.Fatalf("Failed to initialize gRPC clients: %v", err)
@@ -62,8 +62,12 @@ func main() {
 	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(handleTripPreview(app), "handleTripPreview"))
 	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(handleTripStart(app), "handleTripStart"))
 	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(handleUserCreation(app), "handleUserCreation"))
-	mux.Handle("POST /rider/login", tracing.WrapHandlerFunc(proxyLogin("/user/login"), "proxyRiderLogin"))
-	mux.Handle("POST /driver/login", tracing.WrapHandlerFunc((proxyLogin("/driver/login")), "proxyDriverLogin"))
+	mux.Handle("POST /driver", tracing.WrapHandlerFunc(handleCreateDriver(app), "handleCreateDriver"))
+	mux.Handle("POST /driver/cars", tracing.WrapHandlerFunc(handleCreateCar(app), "handleCreateCar"))
+	mux.Handle("GET /driver/cars", tracing.WrapHandlerFunc(handleListCars(app), "handleListCars"))
+	mux.Handle("POST /rider/login", tracing.WrapHandlerFunc(proxyAuth("/user/login"), "proxyRiderLogin"))
+	mux.Handle("POST /driver/login", tracing.WrapHandlerFunc(proxyAuth("/driver/login"), "proxyDriverLogin"))
+	mux.Handle("POST /auth/oauth", tracing.WrapHandlerFunc(proxyAuth("/auth/oauth"), "proxyAuthOAuth"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
 	}, "/ws/drivers"))

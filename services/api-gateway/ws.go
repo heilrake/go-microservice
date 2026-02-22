@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+
 	"ride-sharing/services/api-gateway/grpc_clients"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
@@ -74,11 +76,14 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mes
 		return
 	}
 
-	packageSlug := r.URL.Query().Get("packageSlug")
-	if packageSlug == "" {
-		log.Println("No package slug provided")
+	carID := r.URL.Query().Get("carID")
+	if carID == "" {
+		log.Println("No carID provided")
 		return
 	}
+
+	lat, _ := strconv.ParseFloat(r.URL.Query().Get("latitude"), 64)
+	lon, _ := strconv.ParseFloat(r.URL.Query().Get("longitude"), 64)
 
 	// Add connection to manager
 	connManager.Add(userID, conn)
@@ -89,26 +94,18 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mes
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Closing connections
 	defer func() {
 		connManager.Remove(userID)
-
-		_, err := driverService.Client.UnRegisterDriver(ctx, &driver.RegisterDriverRequest{
-			DriverID:    userID,
-			PackageSlug: packageSlug,
-		})
-		if err != nil {
-			log.Printf("Error unregistering driver: %v", err)
-		}
-
+		driverService.Client.UnRegisterDriver(ctx, &driver.RegisterDriverRequest{DriverID: userID})
 		driverService.Close()
-
 		log.Println("Driver unregistered: ", userID)
 	}()
 
 	driverData, err := driverService.Client.RegisterDriver(ctx, &driver.RegisterDriverRequest{
-		DriverID:    userID,
-		PackageSlug: packageSlug,
+		DriverID:  userID,
+		CarId:     carID,
+		Latitude:  lat,
+		Longitude: lon,
 	})
 	if err != nil {
 		log.Printf("Error registering driver: %v", err)

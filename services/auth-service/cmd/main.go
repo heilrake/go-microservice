@@ -26,6 +26,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /user/login", internal.EnableCORS(internal.UserLoginHandler(userClient)))
 	mux.HandleFunc("POST /driver/login", internal.EnableCORS(internal.DriverLoginHandler(userClient)))
+	mux.HandleFunc("POST /auth/oauth", internal.EnableCORS(internal.OAuthHandler(userClient)))
+	mux.HandleFunc("OPTIONS /auth/oauth", internal.EnableCORS(func(http.ResponseWriter, *http.Request) {}))
 
 	server := &http.Server{Addr: addr, Handler: mux}
 	go func() {

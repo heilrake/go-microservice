@@ -85,6 +85,23 @@ func (h *userGrpcHandler) LoginUser(ctx context.Context, req *pb.LoginUserReques
 	}, nil
 }
 
+func (h *userGrpcHandler) GetOrCreateUserByOAuth(ctx context.Context, req *pb.GetOrCreateUserByOAuthRequest) (*pb.GetOrCreateUserByOAuthResponse, error) {
+	user, err := h.service.GetOrCreateUserByOAuth(ctx, req.GetEmail(), req.GetUsername(), req.GetProfilePicture(), req.GetRole())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get or create user: %v", err)
+	}
+
+	return &pb.GetOrCreateUserByOAuthResponse{
+		User: &pb.User{
+			Id:             user.ID,
+			Username:       user.Username,
+			Email:          user.Email,
+			ProfilePicture: user.ProfilePicture,
+			Role:           user.Role,
+		},
+	}, nil
+}
+
 func (h *userGrpcHandler) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
 	var username, email, profilePicture *string
 

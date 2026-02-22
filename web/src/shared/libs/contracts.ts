@@ -10,7 +10,19 @@ export const BackendEndpoints = {
   WS_RIDERS: "/riders",
   RIDER_LOGIN: "/rider/login",
   DRIVER_LOGIN: "/driver/login",
+  CREATE_DRIVER: "/driver",
+  CREATE_DRIVER_CAR: "/driver/cars",
+  LIST_DRIVER_CARS: "/driver/cars",
 } as const;
+
+
+export const OAuthProviders = {
+  GOOGLE: "google",
+  FACEBOOK: "facebook",
+} as const;
+
+
+export type OAuthProviderType = typeof OAuthProviders[keyof typeof OAuthProviders];
 
 export const TripEvents = {
   NoDriversFound: "trip.event.no_drivers_found",

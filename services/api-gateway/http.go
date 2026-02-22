@@ -7,10 +7,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"ride-sharing/shared/auth"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
 	pb "ride-sharing/shared/proto/user"
+	driverpb "ride-sharing/shared/proto/driver"
 	"ride-sharing/shared/tracing"
 
 	"github.com/stripe/stripe-go/v81"
@@ -193,8 +195,117 @@ func handleUserCreation(app *Clients) http.HandlerFunc {
 	}
 }
 
-// proxyLogin проксує запит на auth-service (rider -> /user/login, driver -> /driver/login).
-func proxyLogin(authPath string) http.HandlerFunc {
+func handleCreateDriver(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleCreateDriver")
+		defer span.End()
+
+		userID, err := auth.UserIDFromRequest(r)
+		if err != nil {
+			http.Error(w, "unauthorized: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		role, _ := auth.RoleFromRequest(r)
+		if role != "driver" {
+			http.Error(w, "forbidden: driver role required", http.StatusForbidden)
+			return
+		}
+
+		var req createDriverRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "failed to parse JSON", http.StatusBadRequest)
+			return
+		}
+		if req.Name == "" {
+			http.Error(w, "name required", http.StatusBadRequest)
+			return
+		}
+
+		driver, err := app.DriverClient.Client.CreateDriver(ctx, &driverpb.CreateDriverRequest{
+			UserId:         userID,
+			Name:           req.Name,
+			ProfilePicture: req.ProfilePicture,
+		})
+		if err != nil {
+			log.Printf("Failed to create driver: %v", err)
+			http.Error(w, "Failed to create driver", http.StatusInternalServerError)
+			return
+		}
+
+		writeJson(w, http.StatusCreated, contracts.APIResponse{Data: driver.Driver})
+	}
+}
+
+func handleCreateCar(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleCreateCar")
+		defer span.End()
+
+		userID, err := auth.UserIDFromRequest(r)
+		if err != nil {
+			http.Error(w, "unauthorized: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		role, _ := auth.RoleFromRequest(r)
+		if role != "driver" {
+			http.Error(w, "forbidden: driver role required", http.StatusForbidden)
+			return
+		}
+
+		var req createCarRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "failed to parse JSON", http.StatusBadRequest)
+			return
+		}
+		if req.CarPlate == "" || req.PackageSlug == "" {
+			http.Error(w, "car_plate and package_slug required", http.StatusBadRequest)
+			return
+		}
+
+		car, err := app.DriverClient.Client.CreateCar(ctx, &driverpb.CreateCarRequest{
+			UserId:      userID,
+			CarPlate:    req.CarPlate,
+			PackageSlug: req.PackageSlug,
+		})
+		if err != nil {
+			log.Printf("Failed to create car: %v", err)
+			http.Error(w, "Failed to create car", http.StatusInternalServerError)
+			return
+		}
+
+		writeJson(w, http.StatusCreated, contracts.APIResponse{Data: car.Car})
+	}
+}
+
+func handleListCars(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleListCars")
+		defer span.End()
+
+		userID, err := auth.UserIDFromRequest(r)
+		if err != nil {
+			http.Error(w, "unauthorized: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		role, _ := auth.RoleFromRequest(r)
+		if role != "driver" {
+			http.Error(w, "forbidden: driver role required", http.StatusForbidden)
+			return
+		}
+
+		resp, err := app.DriverClient.Client.ListCars(ctx, &driverpb.ListCarsRequest{UserId: userID})
+		if err != nil {
+			log.Printf("Failed to list cars: %v", err)
+			http.Error(w, "Failed to list cars", http.StatusInternalServerError)
+			return
+		}
+
+		writeJson(w, http.StatusOK, contracts.APIResponse{Data: resp.Cars})
+	}
+}
+
+// proxyAuth проксує запит на auth-service (login, oauth тощо).
+func proxyAuth(authPath string) http.HandlerFunc {
 	authBase := env.GetString("AUTH_SERVICE_URL", "http://127.0.0.1:8082")
 	targetURL := authBase + authPath
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -1,5 +1,5 @@
-import { RiderLoginForm } from "@/features/auth"
+import { LoginForm } from "@/features/auth/ui/login-form"
 
 export default function RiderLoginPage() {
-  return <RiderLoginForm />
+  return <LoginForm role="rider" />
 }

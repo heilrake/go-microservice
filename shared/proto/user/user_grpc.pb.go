@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUser_FullMethodName    = "/user.UserService/GetUser"
-	UserService_CreateUser_FullMethodName = "/user.UserService/CreateUser"
-	UserService_UpdateUser_FullMethodName = "/user.UserService/UpdateUser"
-	UserService_LoginUser_FullMethodName  = "/user.UserService/LoginUser"
+	UserService_GetUser_FullMethodName                = "/user.UserService/GetUser"
+	UserService_CreateUser_FullMethodName             = "/user.UserService/CreateUser"
+	UserService_UpdateUser_FullMethodName             = "/user.UserService/UpdateUser"
+	UserService_LoginUser_FullMethodName              = "/user.UserService/LoginUser"
+	UserService_GetOrCreateUserByOAuth_FullMethodName = "/user.UserService/GetOrCreateUserByOAuth"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -33,6 +34,7 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
+	GetOrCreateUserByOAuth(ctx context.Context, in *GetOrCreateUserByOAuthRequest, opts ...grpc.CallOption) (*GetOrCreateUserByOAuthResponse, error)
 }
 
 type userServiceClient struct {
@@ -83,6 +85,16 @@ func (c *userServiceClient) LoginUser(ctx context.Context, in *LoginUserRequest,
 	return out, nil
 }
 
+func (c *userServiceClient) GetOrCreateUserByOAuth(ctx context.Context, in *GetOrCreateUserByOAuthRequest, opts ...grpc.CallOption) (*GetOrCreateUserByOAuthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOrCreateUserByOAuthResponse)
+	err := c.cc.Invoke(ctx, UserService_GetOrCreateUserByOAuth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
+	GetOrCreateUserByOAuth(context.Context, *GetOrCreateUserByOAuthRequest) (*GetOrCreateUserByOAuthResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserReq
 }
 func (UnimplementedUserServiceServer) LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LoginUser not implemented")
+}
+func (UnimplementedUserServiceServer) GetOrCreateUserByOAuth(context.Context, *GetOrCreateUserByOAuthRequest) (*GetOrCreateUserByOAuthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetOrCreateUserByOAuth not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -206,6 +222,24 @@ func _UserService_LoginUser_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetOrCreateUserByOAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrCreateUserByOAuthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetOrCreateUserByOAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetOrCreateUserByOAuth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetOrCreateUserByOAuth(ctx, req.(*GetOrCreateUserByOAuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoginUser",
 			Handler:    _UserService_LoginUser_Handler,
+		},
+		{
+			MethodName: "GetOrCreateUserByOAuth",
+			Handler:    _UserService_GetOrCreateUserByOAuth_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
