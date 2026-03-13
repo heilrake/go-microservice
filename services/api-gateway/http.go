@@ -236,6 +236,37 @@ func handleCreateDriver(app *Clients) http.HandlerFunc {
 	}
 }
 
+func handleGetDriver(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleGetDriver")
+		defer span.End()
+
+		userID, err := auth.UserIDFromRequest(r)
+		if err != nil {
+			http.Error(w, "unauthorized: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+		role, _ := auth.RoleFromRequest(r)
+		if role != "driver" {
+			http.Error(w, "forbidden: driver role required", http.StatusForbidden)
+			return
+		}
+
+		resp, err := app.DriverClient.Client.GetDriver(ctx, &driverpb.GetDriverRequest{UserId: userID})
+		if err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+				http.Error(w, "driver profile not found", http.StatusNotFound)
+				return
+			}
+			log.Printf("Failed to get driver: %v", err)
+			http.Error(w, "Failed to get driver", http.StatusInternalServerError)
+			return
+		}
+
+		writeJson(w, http.StatusOK, contracts.APIResponse{Data: resp.Driver})
+	}
+}
+
 func handleCreateCar(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleCreateCar")
@@ -268,6 +299,10 @@ func handleCreateCar(app *Clients) http.HandlerFunc {
 			PackageSlug: req.PackageSlug,
 		})
 		if err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.FailedPrecondition {
+				http.Error(w, st.Message(), http.StatusBadRequest)
+				return
+			}
 			log.Printf("Failed to create car: %v", err)
 			http.Error(w, "Failed to create car", http.StatusInternalServerError)
 			return
@@ -295,6 +330,11 @@ func handleListCars(app *Clients) http.HandlerFunc {
 
 		resp, err := app.DriverClient.Client.ListCars(ctx, &driverpb.ListCarsRequest{UserId: userID})
 		if err != nil {
+			// driver profile doesn't exist yet — return empty list
+			if st, ok := status.FromError(err); ok && (st.Code() == codes.NotFound || st.Code() == codes.FailedPrecondition) {
+				writeJson(w, http.StatusOK, contracts.APIResponse{Data: []*driverpb.Car{}})
+				return
+			}
 			log.Printf("Failed to list cars: %v", err)
 			http.Error(w, "Failed to list cars", http.StatusInternalServerError)
 			return

@@ -1,7 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react";
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet';
 import * as Geohash from 'ngeohash';
@@ -40,7 +39,6 @@ const destinationMarker = new L.Icon({
 
 export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) => {
   const mapRef = useRef<L.Map>(null)
-  const userID = useMemo(() => crypto.randomUUID(), [])
   const [riderLocation, setRiderLocation] = useState<Coordinate>(START_LOCATION)
 
   const driverGeohash = useMemo(() =>
@@ -58,7 +56,6 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
   } = useDriverStreamConnection({
     location: riderLocation,
     geohash: driverGeohash,
-    userID,
     packageSlug,
   })
 
@@ -139,13 +136,10 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
           />
 
           <Marker
-            key={userID}
             position={[riderLocation.latitude, riderLocation.longitude]}
             icon={driverMarker}
           >
             <Popup>
-              Driver ID: {userID}
-              <br />
               Geohash: {driverGeohash}
             </Popup>
           </Marker>

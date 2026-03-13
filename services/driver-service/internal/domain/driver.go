@@ -18,6 +18,7 @@ type DriverRepository interface {
 
 type DriverService interface {
 	CreateDriver(ctx context.Context, userID, name, profilePicture string) (*infrastructure.DriverModel, error)
+	GetDriver(ctx context.Context, userID string) (*infrastructure.DriverModel, error)
 	CreateCar(ctx context.Context, userID, carPlate, packageSlug string) (*infrastructure.CarModel, error)
 	ListCars(ctx context.Context, userID string) ([]*infrastructure.CarModel, error)
 	RegisterDriver(ctx context.Context, userID, carID string, lat, lon float64) (*infrastructure.DriverModel, error)

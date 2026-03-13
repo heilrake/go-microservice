@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 
 import type { CarPackageSlugType } from "@/features/packages";
 import type { Trip } from "@/features/trip";
@@ -15,16 +16,25 @@ type useDriverConnectionProps = {
     longitude: number;
   };
   geohash: string;
-  userID: string;
   packageSlug: CarPackageSlugType;
+}
+
+type MeResponse = { userID: string; role: string };
+
+function meFetcher(url: string): Promise<MeResponse | null> {
+  return fetch(url).then((r) => (r.ok ? r.json() as Promise<MeResponse> : null));
 }
 
 export const useDriverStreamConnection = ({
   location,
   geohash,
-  userID,
   packageSlug
 }: useDriverConnectionProps) => {
+  const { data: me } = useSWR<MeResponse | null>('/api/auth/me', meFetcher, {
+    revalidateOnFocus: false,
+  });
+  const userID = me?.userID ?? null;
+
   const [requestedTrip, setRequestedTrip] = useState<Trip | null>(null)
   const [tripStatus, setTripStatus] = useState<typeof TripEvents[keyof typeof TripEvents] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +51,7 @@ export const useDriverStreamConnection = ({
       if (location) {
         websocket.send(JSON.stringify({
           type: TripEvents.DriverLocation,
-          data: {
-            location,
-            geohash,
-          }
+          data: { location, geohash },
         }));
       }
     };
@@ -58,10 +65,11 @@ export const useDriverStreamConnection = ({
       }
 
       switch (message.type) {
-        case TripEvents.DriverTripRequest:
+        case TripEvents.DriverTripRequest: {
           const trip = (message.data?.trip) ?? message.data;
           setRequestedTrip(trip);
           break;
+        }
         case TripEvents.DriverRegister:
           setDriver(message.data);
           break;
@@ -74,20 +82,14 @@ export const useDriverStreamConnection = ({
       }
     };
 
-    websocket.onclose = () => {
-      console.log('WebSocket closed');
-    };
-
+    websocket.onclose = () => { console.log('WebSocket closed'); };
     websocket.onerror = (event) => {
       setError('WebSocket error occurred');
       console.error('WebSocket error:', event);
     };
 
     return () => {
-      console.log('Closing WebSocket');
-      if (websocket.readyState === WebSocket.OPEN) {
-        websocket.close();
-      }
+      if (websocket.readyState === WebSocket.OPEN) websocket.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userID]);
@@ -103,7 +105,7 @@ export const useDriverStreamConnection = ({
   const resetTripStatus = () => {
     setTripStatus(null);
     setRequestedTrip(null);
-  }
+  };
 
   return { error, tripStatus, driver, requestedTrip, resetTripStatus, sendMessage, setTripStatus };
-}
+};

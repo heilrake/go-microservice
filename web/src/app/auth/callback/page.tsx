@@ -26,20 +26,21 @@ export default function OAuthCallbackPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, provider, role, redirect_uri: redirectUri }),
-      credentials: "include",
     })
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
-          throw new Error(data.message || `OAuth login failed (${res.status})`)
+          throw new Error((data as { message?: string }).message ?? `OAuth login failed (${res.status})`)
         }
-        router.push(role === "driver" ? "/drive" : "/ride")
+        // Cookie is set by the server — no token handling needed here
+        router.push(role === "driver" ? "/driver" : "/rider")
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Unknown error")
       })
       .finally(() => setLoading(false))
-  }, [router])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">

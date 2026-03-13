@@ -6,6 +6,7 @@ option go_package = "shared/proto/driver;driver";
 
 service DriverService {
    rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);
+   rpc GetDriver(GetDriverRequest) returns (GetDriverResponse);
    rpc CreateCar(CreateCarRequest) returns (CreateCarResponse);
    rpc ListCars(ListCarsRequest) returns (ListCarsResponse);
    rpc RegisterDriver(RegisterDriverRequest) returns (RegisterDriverResponse);
@@ -19,6 +20,14 @@ message CreateDriverRequest {
 }
 
 message CreateDriverResponse {
+   Driver driver = 1;
+}
+
+message GetDriverRequest {
+   string user_id = 1;
+}
+
+message GetDriverResponse {
    Driver driver = 1;
 }
 

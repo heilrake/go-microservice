@@ -11,6 +11,7 @@ export const BackendEndpoints = {
   RIDER_LOGIN: "/rider/login",
   DRIVER_LOGIN: "/driver/login",
   CREATE_DRIVER: "/driver",
+  GET_DRIVER: "/driver",
   CREATE_DRIVER_CAR: "/driver/cars",
   LIST_DRIVER_CARS: "/driver/cars",
 } as const;
@@ -145,7 +146,33 @@ export type HTTPDriverLoginResponse = {
     email: string;
     profile_picture?: string;
   };
-  token?: string; // If using JWT tokens
+  token?: string;
+}
+
+export type DriverProfile = {
+  id: string;
+  user_id: string;
+  name: string;
+  profilePicture?: string;
+  carPlate?: string;
+  packageSlug?: string;
+}
+
+export type Car = {
+  id: string;
+  driver_id: string;
+  car_plate: string;
+  package_slug: string;
+}
+
+export type HTTPCreateDriverRequest = {
+  name: string;
+  profile_picture?: string;
+}
+
+export type HTTPCreateCarRequest = {
+  car_plate: string;
+  package_slug: string;
 }
 
 export function isValidTripEvent(event: string): event is TripEventType {

@@ -32,6 +32,14 @@ func (h *driverGrpcHandler) CreateDriver(ctx context.Context, req *pb.CreateDriv
 	return &pb.CreateDriverResponse{Driver: driver.ToProto()}, nil
 }
 
+func (h *driverGrpcHandler) GetDriver(ctx context.Context, req *pb.GetDriverRequest) (*pb.GetDriverResponse, error) {
+	driver, err := h.service.GetDriver(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "driver not found: %v", err)
+	}
+	return &pb.GetDriverResponse{Driver: driver.ToProto()}, nil
+}
+
 func (h *driverGrpcHandler) CreateCar(ctx context.Context, req *pb.CreateCarRequest) (*pb.CreateCarResponse, error) {
 	car, err := h.service.CreateCar(ctx, req.GetUserId(), req.GetCarPlate(), req.GetPackageSlug())
 	if err != nil {
@@ -43,7 +51,8 @@ func (h *driverGrpcHandler) CreateCar(ctx context.Context, req *pb.CreateCarRequ
 func (h *driverGrpcHandler) ListCars(ctx context.Context, req *pb.ListCarsRequest) (*pb.ListCarsResponse, error) {
 	cars, err := h.service.ListCars(ctx, req.GetUserId())
 	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "%s", err.Error())
+		// driver profile doesn't exist yet — return empty list, not an error
+		return &pb.ListCarsResponse{Cars: []*pb.Car{}}, nil
 	}
 	out := make([]*pb.Car, len(cars))
 	for i, c := range cars {

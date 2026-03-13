@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+When working with authenticated domain data (profile, orders, subscriptions, settings, etc):
+
+- Never fetch initial data on the client using useSWR or useEffect
+- Never store auth tokens in client state managers
+- Always fetch authenticated data in a Server Layout or Server Component
+- Hydrate SWR cache using fallback
+- Use SWR only for mutations and background sync
+
+Follow /docs/authenticated-data-fetching.md

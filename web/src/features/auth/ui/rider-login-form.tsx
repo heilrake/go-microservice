@@ -4,9 +4,7 @@ import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { API_URL } from "@/shared/libs/constants"
-import type { HTTPUserLoginRequestPayload, HTTPUserLoginResponse } from "@/shared/libs/contracts"
-import { BackendEndpoints } from "@/shared/libs/contracts"
+import type { HTTPUserLoginRequestPayload } from "@/shared/libs/contracts"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 
@@ -32,32 +30,18 @@ export function RiderLoginForm() {
     try {
       const payload: HTTPUserLoginRequestPayload = data
 
-      const response = await fetch(`${API_URL}${BackendEndpoints.RIDER_LOGIN}`, {
+      const response = await fetch('/api/auth/login', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        let message = `Помилка: ${response.status}`
-        try {
-          const errorData = await response.json()
-          message = errorData.message || message
-        } catch {
-          // не вдалося розпарсити → залишиться статус
-        }
-        throw new Error(message)
+        const errorData = await response.json().catch(() => ({})) as { message?: string }
+        throw new Error(errorData.message ?? `Помилка: ${response.status}`)
       }
 
-      const json = (await response.json()) as { data: HTTPUserLoginResponse }
-      const { user, token } = json.data
-
-      localStorage.setItem("userID", user.id)
-      if (token) {
-        localStorage.setItem("authToken", token)
-      }
-
-      router.push("/ride")
+      router.push("/rider")
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Не вдалося увійти"

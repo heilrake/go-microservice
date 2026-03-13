@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+Never hardcode SWR keys as strings inside components.
+
+Always use swrKeys factory from /lib/swr-keys.ts.
+
+All fallback keys in SWRConfig must use the same factory.
+
+If a key has parameters (id, filters, etc.), use array keys instead of string interpolation.

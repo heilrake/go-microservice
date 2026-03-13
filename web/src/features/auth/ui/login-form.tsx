@@ -71,7 +71,7 @@ export function LoginForm({ role }: Props) {
         throw new Error(message);
       }
 
-      router.push(role === 'driver' ? '/drive' : '/ride');
+      router.push(role === 'driver' ? '/driver' : '/rider');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Не вдалося увійти';
       setError('root', { message });

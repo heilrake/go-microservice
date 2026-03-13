@@ -22,6 +22,10 @@ func (s *driverService) CreateDriver(ctx context.Context, userID, name, profileP
 	return s.repo.CreateDriver(ctx, userID, name, profilePicture)
 }
 
+func (s *driverService) GetDriver(ctx context.Context, userID string) (*infrastructure.DriverModel, error) {
+	return s.repo.GetByUserID(ctx, userID)
+}
+
 func (s *driverService) CreateCar(ctx context.Context, userID, carPlate, packageSlug string) (*infrastructure.CarModel, error) {
 	driver, err := s.repo.GetByUserID(ctx, userID)
 	if err != nil {

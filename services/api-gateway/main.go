@@ -63,6 +63,7 @@ func main() {
 	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(handleTripStart(app), "handleTripStart"))
 	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(handleUserCreation(app), "handleUserCreation"))
 	mux.Handle("POST /driver", tracing.WrapHandlerFunc(handleCreateDriver(app), "handleCreateDriver"))
+	mux.Handle("GET /driver", tracing.WrapHandlerFunc(handleGetDriver(app), "handleGetDriver"))
 	mux.Handle("POST /driver/cars", tracing.WrapHandlerFunc(handleCreateCar(app), "handleCreateCar"))
 	mux.Handle("GET /driver/cars", tracing.WrapHandlerFunc(handleListCars(app), "handleListCars"))
 	mux.Handle("POST /rider/login", tracing.WrapHandlerFunc(proxyAuth("/user/login"), "proxyRiderLogin"))
