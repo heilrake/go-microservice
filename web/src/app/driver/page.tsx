@@ -1,15 +1,24 @@
-"use client"
-import dynamic from "next/dynamic"
+import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import Link from "next/link"
 
+import { AUTH_COOKIE, decodeTokenPayload } from "@/lib/cookie"
 import { routes } from "@/lib/routes/routes"
+import { DriverMapClient } from "./driver-map-client"
 
-const DriverMap = dynamic(() => import("@/features/driver/ui/driver-map").then(mod => mod.DriverMap), { ssr: false })
+export default async function DrivePage({ searchParams }: { searchParams: Promise<{ carId?: string }> }) {
+  const { carId } = await searchParams
 
-export default function DrivePage() {
+  if (!carId) redirect(routes.driver.profile())
+
+  const store = await cookies()
+  const token = store.get(AUTH_COOKIE)?.value
+  const payload = token ? decodeTokenPayload(token) : null
+
+  if (!payload?.user_id) redirect(routes.driver.profile())
+
   return (
     <div className="relative h-screen">
-      {/* Profile shortcut */}
       <div className="absolute top-4 right-4 z-[1000]">
         <Link
           href={routes.driver.profile()}
@@ -19,7 +28,7 @@ export default function DrivePage() {
           Profile
         </Link>
       </div>
-      <DriverMap packageSlug="sedan" />
+      <DriverMapClient carId={carId} userID={payload.user_id} />
     </div>
   )
 }

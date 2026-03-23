@@ -95,6 +95,10 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
+	if err := rabbitmq.DeclareExchanges(); err != nil {
+		log.Fatalf("Failed to declare exchanges: %v", err)
+	}
+
 	consumer := events.NewTripConsumer(rabbitmq, svc)
 	go func() {
 		if err := consumer.Listen(); err != nil {

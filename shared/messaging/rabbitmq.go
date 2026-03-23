@@ -12,8 +12,9 @@ import (
 )
 
 type RabbitMQ struct {
-	Conn    *amqp.Connection
-	Channel *amqp.Channel
+	Conn      *amqp.Connection
+	Channel   *amqp.Channel // used for declaring queues/exchanges and consuming
+	publishCh *amqp.Channel // dedicated channel for publishing (separate to avoid race conditions)
 }
 
 func NewRabbitMQ(uri string) (*RabbitMQ, error) {
@@ -28,9 +29,17 @@ func NewRabbitMQ(uri string) (*RabbitMQ, error) {
 		return nil, fmt.Errorf("failed to open channel: %w", err)
 	}
 
+	publishCh, err := conn.Channel()
+	if err != nil {
+		ch.Close()
+		conn.Close()
+		return nil, fmt.Errorf("failed to open publish channel: %w", err)
+	}
+
 	return &RabbitMQ{
-		Conn:    conn,
-		Channel: ch,
+		Conn:      conn,
+		Channel:   ch,
+		publishCh: publishCh,
 	}, nil
 }
 
@@ -52,7 +61,7 @@ func (r *RabbitMQ) PublishMessage(ctx context.Context, routingKey string, messag
 }
 
 func (r *RabbitMQ) publish(ctx context.Context, exchange, routingKey string, msg amqp.Publishing) error {
-	return r.Channel.PublishWithContext(ctx,
+	return r.publishCh.PublishWithContext(ctx,
 		exchange,   // exchange
 		routingKey, // routing key
 		false,      // mandatory
@@ -61,6 +70,9 @@ func (r *RabbitMQ) publish(ctx context.Context, exchange, routingKey string, msg
 }
 
 func (r *RabbitMQ) Close() {
+	if r.publishCh != nil {
+		r.publishCh.Close()
+	}
 	if r.Channel != nil {
 		r.Channel.Close()
 	}

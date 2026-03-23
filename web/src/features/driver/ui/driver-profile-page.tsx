@@ -1,9 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import type { DriverProfile } from '@/shared/libs/contracts';
 import { Button } from '@/shared/ui/button';
+
+import { LogoutButton } from '@/shared/ui/logout-button';
 
 import { useDriverData } from '../hooks/useDriverData';
 import { useDriverMutations } from '../hooks/useDriverMutations';
@@ -12,13 +16,23 @@ import { DriverProfileCard } from './driver-profile-card';
 import { routes } from '@/lib/routes/routes';
 
 export function DriverProfilePage() {
+  const router = useRouter();
+
   const { driver, cars, isLoading } = useDriverData();
-  console.log("cars", cars
-    
-  )
   const { createProfile, addCar } = useDriverMutations();
-  
+
+  const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+
   const profileExists = driver !== null && driver !== undefined;
+
+  const handleSelectedCarId = (carId: string) => {
+    setSelectedCarId(carId);
+  };
+
+  const handleToStartDriving = () => {
+    if (!selectedCarId) return;
+    router.push(`${routes.driver.root()}?carId=${selectedCarId}`);
+  };
 
   if (isLoading) {
     return (
@@ -34,12 +48,11 @@ export function DriverProfilePage() {
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
           <Link
             href={routes.driver.root()}
-            className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1"
-          >
+            className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1">
             ← Back to Drive
           </Link>
           <h1 className="text-base font-semibold">Driver Profile</h1>
-          <div className="w-20" />
+          <LogoutButton />
         </div>
       </header>
 
@@ -50,12 +63,22 @@ export function DriverProfilePage() {
           onCreateProfile={createProfile}
         />
 
-        {driver && <CarsList cars={cars} onAddCar={addCar} />}
+        {driver && (
+          <CarsList
+            cars={cars}
+            selectedCarId={selectedCarId}
+            onAddCar={addCar}
+            onSelectCarId={handleSelectedCarId}
+          />
+        )}
 
         {profileExists && cars && cars.length > 0 && (
-          <Link href={routes.driver.root()}>
-            <Button className="w-full py-6 text-base">Go Online →</Button>
-          </Link>
+          <Button
+            onClick={handleToStartDriving}
+            disabled={!selectedCarId}
+            className="w-full py-6 text-base">
+            Go Online →
+          </Button>
         )}
       </div>
     </div>

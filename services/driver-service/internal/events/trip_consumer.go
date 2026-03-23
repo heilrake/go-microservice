@@ -85,6 +85,11 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 
 	suitableDriver := suitableDrivers[randomIndex]
 
+	if suitableDriver.UserID == "" {
+		log.Printf("Selected driver %s has empty user_id — skipping (stale DB row, recreate driver profile)", suitableDriver.ID)
+		return fmt.Errorf("selected driver has no user_id")
+	}
+
 	marshalledEvent, err := json.Marshal(payload)
 	if err != nil {
 		return err

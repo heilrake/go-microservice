@@ -16,7 +16,7 @@ var (
 	connManager = messaging.NewConnectionManager()
 )
 
-func handleRiderWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *messaging.RabbitMQ) {
+func handleRiderWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := connManager.Upgrade(w, r)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
@@ -33,21 +33,6 @@ func handleRiderWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mess
 
 	connManager.Add(userID, conn)
 	defer connManager.Remove(userID)
-
-	// Initialize queue consumers
-	queues := []string{
-		messaging.NotifyDriverNoDriversFoundQueue,
-		messaging.NotifyDriverAssignmentQueue,
-		messaging.NotifyPaymentSessionCreatedQueue,
-	}
-
-	for _, q := range queues {
-		consumer := messaging.NewQueueConsumer(rabbitmq, connManager, q)
-
-		if err := consumer.Start(); err != nil {
-			log.Printf("Failed to start consumer for queue: %s: err: %v", q, err)
-		}
-	}
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -92,7 +77,9 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mes
 
 	driverService, err := grpc_client.NewDriverServiceClient()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to create driver gRPC client: %v", err)
+		_ = connManager.SendMessage(userID, contracts.WSMessage{Type: "driver.cmd.error", Data: "service unavailable"})
+		return
 	}
 	defer func() {
 		connManager.Remove(userID)
@@ -108,7 +95,8 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mes
 		Longitude: lon,
 	})
 	if err != nil {
-		log.Printf("Error registering driver: %v", err)
+		log.Printf("Error registering driver (userID=%s carID=%s): %v", userID, carID, err)
+		_ = connManager.SendMessage(userID, contracts.WSMessage{Type: "driver.cmd.error", Data: err.Error()})
 		return
 	}
 
@@ -118,19 +106,6 @@ func handleDriverWebSocket(w http.ResponseWriter, r *http.Request, rabbitmq *mes
 	}); err != nil {
 		log.Printf("Error sending message: %v", err)
 		return
-	}
-
-	// Initialize queue consumers
-	queues := []string{
-		messaging.DriverCmdTripRequestQueue,
-	}
-
-	for _, q := range queues {
-		consumer := messaging.NewQueueConsumer(rabbitmq, connManager, q)
-
-		if err := consumer.Start(); err != nil {
-			log.Printf("Failed to start consumer for queue: %s: err: %v", q, err)
-		}
 	}
 
 	for {

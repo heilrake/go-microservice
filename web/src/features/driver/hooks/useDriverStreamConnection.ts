@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
 
-import type { CarPackageSlugType } from "@/features/packages";
 import type { Trip } from "@/features/trip";
 
 import { WEBSOCKET_URL } from "@/shared/libs/constants";
@@ -16,24 +14,16 @@ type useDriverConnectionProps = {
     longitude: number;
   };
   geohash: string;
-  packageSlug: CarPackageSlugType;
-}
-
-type MeResponse = { userID: string; role: string };
-
-function meFetcher(url: string): Promise<MeResponse | null> {
-  return fetch(url).then((r) => (r.ok ? r.json() as Promise<MeResponse> : null));
+  carId: string;
+  userID: string;
 }
 
 export const useDriverStreamConnection = ({
   location,
   geohash,
-  packageSlug
+  carId,
+  userID,
 }: useDriverConnectionProps) => {
-  const { data: me } = useSWR<MeResponse | null>('/api/auth/me', meFetcher, {
-    revalidateOnFocus: false,
-  });
-  const userID = me?.userID ?? null;
 
   const [requestedTrip, setRequestedTrip] = useState<Trip | null>(null)
   const [tripStatus, setTripStatus] = useState<typeof TripEvents[keyof typeof TripEvents] | null>(null);
@@ -42,9 +32,8 @@ export const useDriverStreamConnection = ({
   const [driver, setDriver] = useState<Driver | null>(null);
 
   useEffect(() => {
-    if (!userID) return;
 
-    const websocket = new WebSocket(`${WEBSOCKET_URL}${BackendEndpoints.WS_DRIVERS}?userID=${userID}&packageSlug=${packageSlug}`);
+    const websocket = new WebSocket(`${WEBSOCKET_URL}${BackendEndpoints.WS_DRIVERS}?userID=${userID}&carID=${carId}&latitude=${location.latitude}&longitude=${location.longitude}`);
     setWs(websocket);
 
     websocket.onopen = () => {
@@ -73,6 +62,9 @@ export const useDriverStreamConnection = ({
         case TripEvents.DriverRegister:
           setDriver(message.data);
           break;
+        case 'driver.cmd.error':
+          setError(`Registration failed: ${message.data as string}`);
+          break;
       }
 
       if (isValidTripEvent(message.type)) {
@@ -92,7 +84,7 @@ export const useDriverStreamConnection = ({
       if (websocket.readyState === WebSocket.OPEN) websocket.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userID]);
+  }, [userID, carId]);
 
   const sendMessage = (message: ClientWsMessage) => {
     if (ws?.readyState === WebSocket.OPEN) {

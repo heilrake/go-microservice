@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import useSWR from 'swr';
 import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet'
 import Image from 'next/image';
 import L from 'leaflet';
@@ -12,6 +13,8 @@ import type { HTTPTripStartResponse, RequestRideProps, RouteFare, TripPreview } 
 import { API_URL } from '@/shared/libs/constants';
 import { BackendEndpoints, type HTTPTripPreviewRequestPayload, type HTTPTripPreviewResponse, type HTTPTripStartRequestPayload } from '@/shared/libs/contracts';
 import { Button } from '@/shared/ui/button';
+
+import { LogoutButton } from '@/shared/ui/logout-button';
 
 import { useRiderStreamConnection } from '../hooks/useRiderStreamConnection';
 import { RiderTripOverview } from './rider-trip-overview';
@@ -38,8 +41,12 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   const [selectedCarType, setSelectedCarType] = useState<CarPackageSlugType | null>(null)
   const [destination, setDestination] = useState<[number, number] | null>(null)
   const mapRef = useRef<L.Map>(null)
-  const userID = useMemo(() => crypto.randomUUID(), [])
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: me } = useSWR<{ userID: string } | null>('/api/auth/me', (url: string) =>
+    fetch(url).then((r) => (r.ok ? r.json() as Promise<{ userID: string }> : null))
+  );
+  const userID = me?.userID ?? '';
   const location = {
     latitude: 49.438280,
     longitude: 32.060711,
@@ -148,6 +155,14 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
     return <div>Error: {error}</div>
   }
 
+  if (!userID) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-sm animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
       <div className={`${destination ? 'flex-[0.7]' : 'flex-1'}`}>
@@ -221,7 +236,10 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
         </MapContainer>
       </div>
 
-      <div className="flex-[0.4]">
+      <div className="flex-[0.4] relative">
+        <div className="absolute top-3 right-3 z-10">
+          <LogoutButton className="text-xs bg-white/90 hover:bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 hover:text-gray-900 shadow-sm transition-colors" />
+        </div>
         <RiderTripOverview
           trip={trip}
           assignedDriver={assignedDriver}

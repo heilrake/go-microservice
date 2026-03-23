@@ -58,6 +58,24 @@ func main() {
 
 	log.Println("Starting RabbitMQ connection")
 
+	if err := rabbitmq.DeclareExchanges(); err != nil {
+		log.Fatalf("Failed to declare exchanges: %v", err)
+	}
+
+	// Start queue consumers once at startup — they route messages by ownerID via connManager
+	for _, q := range []string{
+		messaging.DriverCmdTripRequestQueue,
+		messaging.NotifyDriverNoDriversFoundQueue,
+		messaging.NotifyDriverAssignmentQueue,
+		messaging.NotifyPaymentSessionCreatedQueue,
+	} {
+		consumer := messaging.NewQueueConsumer(rabbitmq, connManager, q)
+		if err := consumer.Start(); err != nil {
+			log.Fatalf("Failed to start consumer for queue %s: %v", q, err)
+		}
+		log.Printf("Started consumer for queue: %s", q)
+	}
+
 	// HTTP routes
 	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(handleTripPreview(app), "handleTripPreview"))
 	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(handleTripStart(app), "handleTripStart"))
@@ -66,14 +84,13 @@ func main() {
 	mux.Handle("GET /driver", tracing.WrapHandlerFunc(handleGetDriver(app), "handleGetDriver"))
 	mux.Handle("POST /driver/cars", tracing.WrapHandlerFunc(handleCreateCar(app), "handleCreateCar"))
 	mux.Handle("GET /driver/cars", tracing.WrapHandlerFunc(handleListCars(app), "handleListCars"))
-	mux.Handle("POST /rider/login", tracing.WrapHandlerFunc(proxyAuth("/user/login"), "proxyRiderLogin"))
-	mux.Handle("POST /driver/login", tracing.WrapHandlerFunc(proxyAuth("/driver/login"), "proxyDriverLogin"))
 	mux.Handle("POST /auth/oauth", tracing.WrapHandlerFunc(proxyAuth("/auth/oauth"), "proxyAuthOAuth"))
+	mux.Handle("POST /dev/login", tracing.WrapHandlerFunc(proxyAuth("/dev/login"), "proxyDevLogin"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleDriverWebSocket(w, r, rabbitmq)
 	}, "/ws/drivers"))
 	mux.Handle("/ws/riders", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleRiderWebSocket(w, r, rabbitmq)
+		handleRiderWebSocket(w, r)
 	}, "/ws/riders"))
 	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)

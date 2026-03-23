@@ -1,75 +1,77 @@
-"use client"
+'use client';
 
-import { useMemo, useRef, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { useMemo, useRef, useState } from 'react';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import Link from 'next/link';
 import L from 'leaflet';
 import * as Geohash from 'ngeohash';
 
-import { useDriverStreamConnection } from "@/features/driver/hooks/useDriverStreamConnection"
-import { DriverCard } from "@/features/driver/ui/driver-card";
-import { DriverTripOverview } from "@/features/driver/ui/driver-trip-overview";
-import { MapClickHandler, RoutingControl } from "@/features/map";
-import type { CarPackageSlugType } from "@/features/packages";
-import type { Coordinate } from "@/features/trip";
+import { useDriverStreamConnection } from '@/features/driver/hooks/useDriverStreamConnection';
+import { DriverCard } from '@/features/driver/ui/driver-card';
+import { DriverTripOverview } from '@/features/driver/ui/driver-trip-overview';
+import { MapClickHandler, RoutingControl } from '@/features/map';
+import type { CarPackageSlugType } from '@/features/packages';
+import type { Coordinate } from '@/features/trip';
 
-import { TripEvents } from "@/shared/libs/contracts";
+
+import { TripEvents } from '@/shared/libs/contracts';
+
+import { routes } from '@/lib/routes/routes';
 
 const START_LOCATION: Coordinate = {
-  latitude: 49.438280,
+  latitude: 49.43828,
   longitude: 32.060711,
-}
+};
 
 const driverMarker = new L.Icon({
-  iconUrl: "https://www.svgrepo.com/show/25407/car.svg",
+  iconUrl: 'https://www.svgrepo.com/show/25407/car.svg',
   iconSize: [30, 30],
   iconAnchor: [15, 30],
 });
 
 const startLocationMarker = new L.Icon({
-  iconUrl: "https://www.svgrepo.com/show/535711/user.svg",
+  iconUrl: 'https://www.svgrepo.com/show/535711/user.svg',
   iconSize: [30, 40], // Size of the marker
   iconAnchor: [20, 40], // Anchor point
 });
 
 const destinationMarker = new L.Icon({
-  iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Map_pin_icon.svg/176px-Map_pin_icon.svg.png",
+  iconUrl:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Map_pin_icon.svg/176px-Map_pin_icon.svg.png',
   iconSize: [40, 40], // Size of the marker
   iconAnchor: [20, 40], // Anchor point
 });
 
-export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) => {
-  const mapRef = useRef<L.Map>(null)
-  const [riderLocation, setRiderLocation] = useState<Coordinate>(START_LOCATION)
+export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) => {
+  const mapRef = useRef<L.Map>(null);
+  const [riderLocation, setRiderLocation] = useState<Coordinate>(START_LOCATION);
 
-  const driverGeohash = useMemo(() =>
-    Geohash.encode(riderLocation?.latitude, riderLocation?.longitude, 7)
-    , [riderLocation?.latitude, riderLocation?.longitude]);
+  const driverGeohash = useMemo(
+    () => Geohash.encode(riderLocation?.latitude, riderLocation?.longitude, 7),
+    [riderLocation?.latitude, riderLocation?.longitude],
+  );
 
-  const {
-    error,
-    driver,
-    tripStatus,
-    requestedTrip,
-    sendMessage,
-    setTripStatus,
-    resetTripStatus,
-  } = useDriverStreamConnection({
-    location: riderLocation,
-    geohash: driverGeohash,
-    packageSlug,
-  })
+  const { error, driver, tripStatus, requestedTrip, sendMessage, setTripStatus, resetTripStatus } =
+    useDriverStreamConnection({
+      location: riderLocation,
+      geohash: driverGeohash,
+      carId,
+      userID,
+    });
+
+  console.log('driver', driver);
 
   const handleMapClick = (e: L.LeafletMouseEvent) => {
     setRiderLocation({
       latitude: e.latlng.lat,
-      longitude: e.latlng.lng
-    })
-  }
+      longitude: e.latlng.lng,
+    });
+  };
 
   const handleAcceptTrip = () => {
     if (!requestedTrip || !requestedTrip.id || !driver) {
-      alert("No trip ID found or driver is not set")
-      return
+      alert('No trip ID found or driver is not set');
+      return;
     }
 
     sendMessage({
@@ -78,16 +80,16 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
         tripID: requestedTrip.id,
         riderID: requestedTrip.userID,
         driver: driver,
-      }
-    })
+      },
+    });
 
-    setTripStatus(TripEvents.DriverTripAccept)
-  }
+    setTripStatus(TripEvents.DriverTripAccept);
+  };
 
   const handleDeclineTrip = () => {
     if (!requestedTrip || !requestedTrip.id || !driver) {
-      alert("No trip ID found or driver is not set")
-      return
+      alert('No trip ID found or driver is not set');
+      return;
     }
 
     sendMessage({
@@ -96,29 +98,37 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
         tripID: requestedTrip.id,
         riderID: requestedTrip.userID,
         driver: driver,
-      }
-    })
+      },
+    });
 
-    setTripStatus(TripEvents.DriverTripDecline)
-    resetTripStatus()
-  }
+    setTripStatus(TripEvents.DriverTripDecline);
+    resetTripStatus();
+  };
 
-  const parsedRoute = useMemo(() =>
-    requestedTrip?.route?.geometry[0]?.coordinates
-      .map((coord) => [coord?.longitude, coord?.latitude] as [number, number])
-    , [requestedTrip])
+  const parsedRoute = useMemo(
+    () =>
+      requestedTrip?.route?.geometry[0]?.coordinates.map(
+        (coord) => [coord?.longitude, coord?.latitude] as [number, number],
+      ),
+    [requestedTrip],
+  );
 
   // destination is the last coordinate in the route
-  const destination = useMemo(() =>
-    requestedTrip?.route?.geometry[0]?.coordinates[requestedTrip?.route?.geometry[0]?.coordinates?.length - 1]
-    , [requestedTrip])
+  const destination = useMemo(
+    () =>
+      requestedTrip?.route?.geometry[0]?.coordinates[
+        requestedTrip?.route?.geometry[0]?.coordinates?.length - 1
+      ],
+    [requestedTrip],
+  );
   // start location is the first coordinate in the route
-  const startLocation = useMemo(() =>
-    requestedTrip?.route?.geometry[0]?.coordinates[0]
-    , [requestedTrip])
+  const startLocation = useMemo(
+    () => requestedTrip?.route?.geometry[0]?.coordinates[0],
+    [requestedTrip],
+  );
 
   if (error) {
-    return <div>Error: {error}</div>
+    return <div>Error: {error}</div>;
   }
 
   return (
@@ -128,37 +138,33 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
           center={[riderLocation.latitude, riderLocation.longitude]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
-          ref={mapRef}
-        >
+          ref={mapRef}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/'>CARTO</a>"
           />
 
-          <Marker
-            position={[riderLocation.latitude, riderLocation.longitude]}
-            icon={driverMarker}
-          >
-            <Popup>
-              Geohash: {driverGeohash}
-            </Popup>
+          <Marker position={[riderLocation.latitude, riderLocation.longitude]} icon={driverMarker}>
+            <Popup>Geohash: {driverGeohash}</Popup>
           </Marker>
 
           {startLocation && (
-            <Marker position={[startLocation.longitude, startLocation.latitude]} icon={startLocationMarker}>
+            <Marker
+              position={[startLocation.longitude, startLocation.latitude]}
+              icon={startLocationMarker}>
               <Popup>Start Location</Popup>
             </Marker>
           )}
 
           {destination && (
-            <Marker position={[destination.longitude, destination.latitude]} icon={destinationMarker}>
+            <Marker
+              position={[destination.longitude, destination.latitude]}
+              icon={destinationMarker}>
               <Popup>Destination</Popup>
             </Marker>
           )}
 
-          {parsedRoute && (
-            <RoutingControl route={parsedRoute} />
-          )}
+          {parsedRoute && <RoutingControl route={parsedRoute} />}
 
           <MapClickHandler onClick={handleMapClick} />
         </MapContainer>
@@ -166,8 +172,9 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
 
       <div className="flex flex-col md:w-[400px] bg-white border-t md:border-t-0 md:border-l">
         <div className="p-4 border-b">
-          <DriverCard driver={driver} packageSlug={packageSlug} />
+          <DriverCard driver={driver} packageSlug={(driver?.packageSlug ?? 'sedan') as CarPackageSlugType} />
         </div>
+        <div className="p-4 border-b">Your current car: {driver?.carPlate}</div>
         <div className="flex-1 overflow-y-auto">
           <DriverTripOverview
             trip={requestedTrip}
@@ -175,8 +182,19 @@ export const DriverMap = ({ packageSlug }: { packageSlug: CarPackageSlugType }) 
             onAcceptTrip={handleAcceptTrip}
             onDeclineTrip={handleDeclineTrip}
           />
+
+          <div className="p-4">
+            <p>
+              Before you start driving, please go to your profile and select a different car.
+            </p>
+            <Link
+              href={routes.driver.profile()}
+              className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-md text-sm font-medium hover:bg-gray-50 transition-colors border">
+              <span>Go to profile</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -2,8 +2,10 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	pb "ride-sharing/shared/proto/user"
 )
@@ -21,11 +23,6 @@ func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-type userLoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type loginResponse struct {
 	Data struct {
 		User  *pb.User `json:"user"`
@@ -33,36 +30,55 @@ type loginResponse struct {
 	} `json:"data"`
 }
 
-func UserLoginHandler(userClient *UserClient) http.HandlerFunc {
+// devLoginRequest is the request body for POST /dev/login
+type devLoginRequest struct {
+	Role string `json:"role"` // "driver" or "rider"
+	Seed int    `json:"seed"` // 1..N — creates separate test users per seed
+}
+
+// DevLoginHandler creates or reuses a fake user and returns a signed JWT.
+// Only works when ENVIRONMENT=development.
+func DevLoginHandler(userClient *UserClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		if os.Getenv("ENVIRONMENT") != "development" {
+			http.Error(w, "dev login only available in development", http.StatusForbidden)
 			return
 		}
-		var req userLoginRequest
+
+		var req devLoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "invalid JSON", http.StatusBadRequest)
 			return
 		}
-		if req.Email == "" || req.Password == "" {
-			http.Error(w, "email and password required", http.StatusBadRequest)
+		if req.Role != "rider" && req.Role != "driver" {
+			http.Error(w, "role must be 'driver' or 'rider'", http.StatusBadRequest)
 			return
 		}
+		if req.Seed < 1 {
+			req.Seed = 1
+		}
 
-		resp, err := userClient.Client.LoginUser(r.Context(), &pb.LoginUserRequest{
-			Email:    req.Email,
-			Password: req.Password,
-			Role:     "rider",
+		email := fmt.Sprintf("dev-%s-%d@dev.local", req.Role, req.Seed)
+		name := fmt.Sprintf("Dev %s %d", capitalize(req.Role), req.Seed)
+
+		resp, err := userClient.Client.GetOrCreateUserByOAuth(r.Context(), &pb.GetOrCreateUserByOAuthRequest{
+			Email:    email,
+			Username: name,
+			Role:     req.Role,
 		})
 		if err != nil {
-			log.Printf("auth-service: LoginUser: %v", err)
-			http.Error(w, "invalid credentials", http.StatusUnauthorized)
+			log.Printf("dev-login: GetOrCreateUserByOAuth: %v", err)
+			http.Error(w, "failed to get or create dev user", http.StatusInternalServerError)
 			return
 		}
 
-		token, err := SignToken(resp.User.Id, "user")
+		jwtRole := "user"
+		if req.Role == "driver" {
+			jwtRole = "driver"
+		}
+		token, err := SignToken(resp.User.Id, jwtRole)
 		if err != nil {
-			log.Printf("auth-service: SignToken: %v", err)
+			log.Printf("dev-login: SignToken: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -75,64 +91,9 @@ func UserLoginHandler(userClient *UserClient) http.HandlerFunc {
 	}
 }
 
-type driverLoginResponse struct {
-	Data struct {
-		Driver *driverResponse `json:"driver"`
-		Token  string          `json:"token,omitempty"`
-	} `json:"data"`
-}
-
-type driverResponse struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Email          string `json:"email"`
-	ProfilePicture string `json:"profile_picture,omitempty"`
-}
-
-func DriverLoginHandler(userClient *UserClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		var req userLoginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "invalid JSON", http.StatusBadRequest)
-			return
-		}
-		if req.Email == "" || req.Password == "" {
-			http.Error(w, "email and password required", http.StatusBadRequest)
-			return
-		}
-
-		resp, err := userClient.Client.LoginUser(r.Context(), &pb.LoginUserRequest{
-			Email:    req.Email,
-			Password: req.Password,
-			Role:     "driver",
-		})
-		if err != nil {
-			log.Printf("auth-service: DriverLoginUser: %v", err)
-			http.Error(w, "invalid credentials", http.StatusUnauthorized)
-			return
-		}
-
-		token, err := SignToken(resp.User.Id, "driver")
-		if err != nil {
-			log.Printf("auth-service: SignToken: %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		driver := &driverResponse{
-			ID:             resp.User.Id,
-			Name:           resp.User.Username,
-			Email:          resp.User.Email,
-			ProfilePicture: resp.User.ProfilePicture,
-		}
-		out := driverLoginResponse{}
-		out.Data.Driver = driver
-		out.Data.Token = token
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(out)
+func capitalize(s string) string {
+	if len(s) == 0 {
+		return s
 	}
+	return string(s[0]-32) + s[1:]
 }

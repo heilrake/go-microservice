@@ -107,11 +107,11 @@ func (r *postgresRepository) RegisterDriver(ctx context.Context, userID, carID s
 
 func (r *postgresRepository) UnregisterDriver(ctx context.Context, userID string) error {
 	updates := map[string]interface{}{
-		"is_available":    false,
-		"current_car_id":  nil,
-		"latitude":        0,
-		"longitude":       0,
-		"geohash":         "",
+		"is_available":   false,
+		"current_car_id": nil,
+		"latitude":       0,
+		"longitude":      0,
+		"geohash":        "",
 	}
 	if err := r.db.WithContext(ctx).Model(&db.DriverModel{}).Where("user_id = ?", userID).Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to unregister driver: %w", err)
@@ -129,4 +129,5 @@ func (r *postgresRepository) FindAvailableDrivers(ctx context.Context, packageTy
 		return nil, fmt.Errorf("failed to find available drivers: %w", err)
 	}
 	return drivers, nil
+
 }

@@ -24,9 +24,11 @@ export function DriverDataProvider({
           [swrKeys.driver.root()]: initialDriver,
           [swrKeys.driver.cars()]: initialCars,
         },
-        fetcher: (resource, init) => fetch(resource, init).then(res => res.json()),
+        fetcher: (resource, init) =>
+          fetch(resource, init).then(res => res.json()).then((r: { data?: unknown }) => r?.data ?? r),
         revalidateOnMount: false,
         revalidateOnFocus: false,
+        revalidateIfStale: false,
       }}>
       {children}
     </SWRConfig>

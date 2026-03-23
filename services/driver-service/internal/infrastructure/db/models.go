@@ -16,7 +16,7 @@ type DriverModel struct {
 	Latitude       float64   `gorm:"column:latitude;type:decimal(10,8)"`
 	Longitude      float64   `gorm:"column:longitude;type:decimal(11,8)"`
 	CurrentCarID   *string   `gorm:"column:current_car_id;type:uuid"`
-	IsAvailable    bool      `gorm:"column:is_available;type:boolean;default:true"`
+	IsAvailable    bool      `gorm:"column:is_available;type:boolean;default:false"`
 	CreatedAt      time.Time `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;autoUpdateTime"`
 

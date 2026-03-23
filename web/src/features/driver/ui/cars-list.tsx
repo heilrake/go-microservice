@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import type { CarPackageSlugType } from '@/features/packages';
 import { PackagesMeta } from '@/features/packages/ui/packages-meta';
+
 import type { Car, HTTPCreateCarRequest } from '@/shared/libs/contracts';
+import { cn } from '@/shared/libs/utils';
 import { Button } from '@/shared/ui/button';
 
 import { AddCarForm } from './add-car-form';
@@ -12,12 +14,14 @@ import { AddCarForm } from './add-car-form';
 type CarsListProps = {
   cars: Car[];
   onAddCar: (data: HTTPCreateCarRequest) => Promise<void>;
+  onSelectCarId: (carId: string) => void;
+  selectedCarId: string | null;
 };
 
-function CarItem({ car }: { car: Car }) {
+function CarItem({ car, onSelect, selected }: { car: Car, onSelect: () => void, selected: boolean }) {
   const meta = PackagesMeta[car.package_slug as CarPackageSlugType];
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border bg-gray-50">
+    <div className={cn("flex items-center gap-3 p-3 rounded-xl border bg-gray-50", selected && "border-primary bg-primary/5")} onClick={onSelect}>
       <div className="p-2 bg-white rounded-lg border text-gray-600 shrink-0">
         {meta?.icon ?? '🚗'}
       </div>
@@ -31,7 +35,7 @@ function CarItem({ car }: { car: Car }) {
   );
 }
 
-export function CarsList({ cars, onAddCar }: CarsListProps) {
+export function CarsList({ cars, onAddCar, onSelectCarId, selectedCarId }: CarsListProps) {
   const [showForm, setShowForm] = useState(false);
 
   return (
@@ -65,7 +69,7 @@ export function CarsList({ cars, onAddCar }: CarsListProps) {
         )}
 
         {cars.map((car) => (
-          <CarItem key={car.id} car={car} />
+          <CarItem key={car.id} car={car} onSelect={() => onSelectCarId(car.id)} selected={selectedCarId === car.id} />
         ))}
 
         {showForm && (

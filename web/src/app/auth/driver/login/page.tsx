@@ -1,5 +1,5 @@
-import { LoginForm } from "@/features/auth/ui/login-form"
+import { redirect } from 'next/navigation';
 
 export default function DriverLoginPage() {
-  return <LoginForm role="driver" />
+  redirect('/auth?role=driver');
 }
