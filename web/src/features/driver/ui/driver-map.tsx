@@ -13,7 +13,6 @@ import { MapClickHandler, RoutingControl } from '@/features/map';
 import type { CarPackageSlugType } from '@/features/packages';
 import type { Coordinate } from '@/features/trip';
 
-
 import { TripEvents } from '@/shared/libs/contracts';
 
 import { routes } from '@/lib/routes/routes';
@@ -174,7 +173,6 @@ export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) 
         <div className="p-4 border-b">
           <DriverCard driver={driver} packageSlug={(driver?.packageSlug ?? 'sedan') as CarPackageSlugType} />
         </div>
-        <div className="p-4 border-b">Your current car: {driver?.carPlate}</div>
         <div className="flex-1 overflow-y-auto">
           <DriverTripOverview
             trip={requestedTrip}
