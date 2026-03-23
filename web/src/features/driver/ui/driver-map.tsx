@@ -9,7 +9,7 @@ import * as Geohash from 'ngeohash';
 import { useDriverStreamConnection } from '@/features/driver/hooks/useDriverStreamConnection';
 import { DriverCard } from '@/features/driver/ui/driver-card';
 import { DriverTripOverview } from '@/features/driver/ui/driver-trip-overview';
-import { MapClickHandler, RoutingControl } from '@/features/map';
+import { getMapIcon, MapClickHandler, RoutingControl } from '@/features/map';
 import type { CarPackageSlugType } from '@/features/packages';
 import type { Coordinate } from '@/features/trip';
 
@@ -22,24 +22,9 @@ const START_LOCATION: Coordinate = {
   longitude: 32.060711,
 };
 
-const driverMarker = new L.Icon({
-  iconUrl: 'https://www.svgrepo.com/show/25407/car.svg',
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-});
-
-const startLocationMarker = new L.Icon({
-  iconUrl: 'https://www.svgrepo.com/show/535711/user.svg',
-  iconSize: [30, 40], // Size of the marker
-  iconAnchor: [20, 40], // Anchor point
-});
-
-const destinationMarker = new L.Icon({
-  iconUrl:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Map_pin_icon.svg/176px-Map_pin_icon.svg.png',
-  iconSize: [40, 40], // Size of the marker
-  iconAnchor: [20, 40], // Anchor point
-});
+const driverMarker = getMapIcon('car');
+const startLocationMarker = getMapIcon('user');
+const destinationMarker = getMapIcon('pin');
 
 export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) => {
   const mapRef = useRef<L.Map>(null);

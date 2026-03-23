@@ -1,35 +1,25 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import useSWR from 'swr';
 import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet'
 import Image from 'next/image';
 import L from 'leaflet';
+import useSWR from 'swr';
 
-import { getGeohashBounds,MapClickHandler, RoutingControl } from "@/features/map";
+import { getGeohashBounds, getMapIcon, MapClickHandler, RoutingControl } from "@/features/map";
 import type { CarPackageSlugType } from '@/features/packages';
 import type { HTTPTripStartResponse, RequestRideProps, RouteFare, TripPreview } from "@/features/trip";
 
 import { API_URL } from '@/shared/libs/constants';
 import { BackendEndpoints, type HTTPTripPreviewRequestPayload, type HTTPTripPreviewResponse, type HTTPTripStartRequestPayload } from '@/shared/libs/contracts';
 import { Button } from '@/shared/ui/button';
-
 import { LogoutButton } from '@/shared/ui/logout-button';
 
 import { useRiderStreamConnection } from '../hooks/useRiderStreamConnection';
 import { RiderTripOverview } from './rider-trip-overview';
 
-const userMarker = new L.Icon({
-  iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Map_pin_icon.svg/176px-Map_pin_icon.svg.png",
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-});
-
-const driverMarker = new L.Icon({
-  iconUrl: "https://www.svgrepo.com/show/25407/car.svg",
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-});
+const userMarker = getMapIcon('pin');
+const driverMarker = getMapIcon('car');
 
 type RiderMapProps = {
   onRouteSelected?: (distance: number) => void;
