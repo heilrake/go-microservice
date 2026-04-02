@@ -23,6 +23,17 @@ import (
 
 var tracer = tracing.GetTracer("api-gateway")
 
+// handleTripPreview godoc
+// @Summary      Preview trip
+// @Description  Calculate route geometry and available fare options before starting a trip
+// @Tags         trips
+// @Accept       json
+// @Produce      json
+// @Param        body body previewTripRequest true "Pickup and destination coordinates"
+// @Success      201  {object}  contracts.APIResponse  "Route and fare options"
+// @Failure      400  {string}  string                 "Invalid JSON"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /trip/preview [post]
 func handleTripPreview(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleTripPreview")
@@ -50,6 +61,17 @@ func handleTripPreview(app *Clients) http.HandlerFunc {
 	}
 }
 
+// handleTripStart godoc
+// @Summary      Start trip
+// @Description  Create a trip from a previously previewed ride fare
+// @Tags         trips
+// @Accept       json
+// @Produce      json
+// @Param        body body startTripRequest true "Selected fare and user ID"
+// @Success      201  {object}  contracts.APIResponse  "Created trip ID"
+// @Failure      400  {string}  string                 "Invalid JSON"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /trip/start [post]
 func handleTripStart(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleTripStart")
@@ -151,6 +173,17 @@ func handleStripeWebhook(w http.ResponseWriter, r *http.Request, rb *messaging.R
 	}
 }
 
+// handleUserCreation godoc
+// @Summary      Create user
+// @Description  Register a new user as a rider or driver
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        body body createUserRequest true "User registration details"
+// @Success      201  {object}  contracts.APIResponse  "Created user"
+// @Failure      400  {string}  string                 "Invalid JSON or invalid role"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /user/create [post]
 func handleUserCreation(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleUserCreation")
@@ -195,6 +228,20 @@ func handleUserCreation(app *Clients) http.HandlerFunc {
 	}
 }
 
+// handleCreateDriver godoc
+// @Summary      Create driver profile
+// @Description  Create a driver profile for the authenticated user. Requires driver role JWT.
+// @Tags         drivers
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body body createDriverRequest true "Driver name and optional profile picture URL"
+// @Success      201  {object}  contracts.APIResponse  "Created driver profile"
+// @Failure      400  {string}  string                 "Invalid JSON or missing name"
+// @Failure      401  {string}  string                 "Unauthorized"
+// @Failure      403  {string}  string                 "Forbidden: driver role required"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /driver [post]
 func handleCreateDriver(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleCreateDriver")
@@ -236,6 +283,18 @@ func handleCreateDriver(app *Clients) http.HandlerFunc {
 	}
 }
 
+// handleGetDriver godoc
+// @Summary      Get driver profile
+// @Description  Retrieve the driver profile of the authenticated user. Requires driver role JWT.
+// @Tags         drivers
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  contracts.APIResponse  "Driver profile"
+// @Failure      401  {string}  string                 "Unauthorized"
+// @Failure      403  {string}  string                 "Forbidden: driver role required"
+// @Failure      404  {string}  string                 "Driver profile not found"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /driver [get]
 func handleGetDriver(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleGetDriver")
@@ -267,6 +326,20 @@ func handleGetDriver(app *Clients) http.HandlerFunc {
 	}
 }
 
+// handleCreateCar godoc
+// @Summary      Add car
+// @Description  Register a car for the authenticated driver. Requires driver role JWT.
+// @Tags         drivers
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body body createCarRequest true "Car plate and package slug (e.g. \"economy\", \"comfort\")"
+// @Success      201  {object}  contracts.APIResponse  "Created car"
+// @Failure      400  {string}  string                 "Missing required fields"
+// @Failure      401  {string}  string                 "Unauthorized"
+// @Failure      403  {string}  string                 "Forbidden: driver role required"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /driver/cars [post]
 func handleCreateCar(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleCreateCar")
@@ -312,6 +385,17 @@ func handleCreateCar(app *Clients) http.HandlerFunc {
 	}
 }
 
+// handleListCars godoc
+// @Summary      List cars
+// @Description  Get all cars registered to the authenticated driver. Requires driver role JWT.
+// @Tags         drivers
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  contracts.APIResponse  "List of cars"
+// @Failure      401  {string}  string                 "Unauthorized"
+// @Failure      403  {string}  string                 "Forbidden: driver role required"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /driver/cars [get]
 func handleListCars(app *Clients) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := tracer.Start(r.Context(), "handleListCars")

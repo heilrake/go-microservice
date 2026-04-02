@@ -28,6 +28,37 @@ k8s_yaml('./infra/development/k8s/driver-postgres.yaml')
 k8s_resource('driver-postgres', port_forwards=['30433:5432'], labels='databases')
 ### End PostgreSQL Databases ###
 
+### Swagger Docs ###
+local_resource(
+  'swagger-generate',
+  'cd services/api-gateway && swag init -g main.go -d .,../../shared/contracts,../../shared/types --parseInternal -o ./docs',
+  deps=[
+    './services/api-gateway/http.go',
+    './services/api-gateway/types.go',
+    './services/api-gateway/docs.go',
+    './shared/contracts',
+    './shared/types',
+  ],
+  labels='tooling',
+)
+### End Swagger Docs ###
+
+### Proto Docs ###
+local_resource(
+  'proto-docs-generate',
+  'make proto-docs',
+  deps=['./proto'],
+  labels='tooling',
+)
+local_resource(
+  name='proto-docs-serve',
+  serve_cmd='python3 -m http.server 8090',
+  serve_dir='docs/proto-docs',
+  resource_deps=['proto-docs-generate'],
+  labels='tooling',
+)
+### End Proto Docs ###
+
 ### API Gateway ###
 
 gateway_compile_cmd = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/api-gateway ./services/api-gateway'
@@ -37,7 +68,9 @@ if os.name == 'nt':
 local_resource(
   'api-gateway-compile',
   gateway_compile_cmd,
-  deps=['./services/api-gateway', './shared'], labels="compiles")
+  deps=['./services/api-gateway', './shared'],
+  resource_deps=['swagger-generate'],
+  labels="compiles")
 
 
 docker_build_with_restart(

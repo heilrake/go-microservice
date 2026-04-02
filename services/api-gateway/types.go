@@ -53,3 +53,17 @@ type createCarRequest struct {
 	CarPlate    string `json:"car_plate"`
 	PackageSlug string `json:"package_slug"`
 }
+
+// oauthLoginRequest is the request body for POST /auth/oauth.
+type oauthLoginRequest struct {
+	Code        string `json:"code"`
+	Provider    string `json:"provider"`    // "google"
+	Role        string `json:"role"`        // "rider" | "driver"
+	RedirectURI string `json:"redirect_uri"`
+}
+
+// devLoginRequest is the request body for POST /dev/login.
+type devLoginRequest struct {
+	Role string `json:"role"` // "rider" | "driver"
+	Seed int    `json:"seed"`
+}

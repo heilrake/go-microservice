@@ -1,0 +1,381 @@
+definitions:
+  contracts.APIError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  contracts.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/contracts.APIError'
+    type: object
+  main.createCarRequest:
+    properties:
+      car_plate:
+        type: string
+      package_slug:
+        type: string
+    type: object
+  main.createDriverRequest:
+    properties:
+      name:
+        type: string
+      profile_picture:
+        type: string
+    type: object
+  main.createUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        description: '"rider" | "driver" — required'
+        type: string
+      username:
+        type: string
+    type: object
+  main.devLoginRequest:
+    properties:
+      role:
+        description: '"rider" | "driver"'
+        type: string
+      seed:
+        type: integer
+    type: object
+  main.oauthLoginRequest:
+    properties:
+      code:
+        type: string
+      provider:
+        description: '"google"'
+        type: string
+      redirect_uri:
+        type: string
+      role:
+        description: '"rider" | "driver"'
+        type: string
+    type: object
+  main.previewTripRequest:
+    properties:
+      destination:
+        $ref: '#/definitions/types.Coordinate'
+      pickup:
+        $ref: '#/definitions/types.Coordinate'
+      userID:
+        type: string
+    type: object
+  main.startTripRequest:
+    properties:
+      rideFareID:
+        type: string
+      userID:
+        type: string
+    type: object
+  types.Coordinate:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/oauth:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate via Google OAuth. On success returns a signed JWT
+        token.
+      parameters:
+      - description: OAuth code and provider info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.oauthLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{ token: <jwt> }'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "502":
+          description: Auth service unavailable
+          schema:
+            type: string
+      summary: OAuth login
+      tags:
+      - auth
+  /dev/login:
+    post:
+      consumes:
+      - application/json
+      description: Returns a signed JWT for a seeded test account. Only available
+        in dev environment.
+      parameters:
+      - description: Role and seed number
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.devLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{ token: <jwt> }'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            type: string
+      summary: Dev login (development only)
+      tags:
+      - auth
+  /driver:
+    get:
+      description: Retrieve the driver profile of the authenticated user. Requires
+        driver role JWT.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Driver profile
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: driver role required'
+          schema:
+            type: string
+        "404":
+          description: Driver profile not found
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get driver profile
+      tags:
+      - drivers
+    post:
+      consumes:
+      - application/json
+      description: Create a driver profile for the authenticated user. Requires driver
+        role JWT.
+      parameters:
+      - description: Driver name and optional profile picture URL
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.createDriverRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created driver profile
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Invalid JSON or missing name
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: driver role required'
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create driver profile
+      tags:
+      - drivers
+  /driver/cars:
+    get:
+      description: Get all cars registered to the authenticated driver. Requires driver
+        role JWT.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of cars
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: driver role required'
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List cars
+      tags:
+      - drivers
+    post:
+      consumes:
+      - application/json
+      description: Register a car for the authenticated driver. Requires driver role
+        JWT.
+      parameters:
+      - description: Car plate and package slug (e.g. \
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.createCarRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created car
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Missing required fields
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: driver role required'
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add car
+      tags:
+      - drivers
+  /trip/preview:
+    post:
+      consumes:
+      - application/json
+      description: Calculate route geometry and available fare options before starting
+        a trip
+      parameters:
+      - description: Pickup and destination coordinates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.previewTripRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Route and fare options
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Invalid JSON
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Preview trip
+      tags:
+      - trips
+  /trip/start:
+    post:
+      consumes:
+      - application/json
+      description: Create a trip from a previously previewed ride fare
+      parameters:
+      - description: Selected fare and user ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.startTripRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created trip ID
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Invalid JSON
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Start trip
+      tags:
+      - trips
+  /user/create:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user as a rider or driver
+      parameters:
+      - description: User registration details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created user
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Invalid JSON or invalid role
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Create user
+      tags:
+      - users
+swagger: "2.0"
