@@ -58,6 +58,33 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		return err
 	}
 
+	// Driver-service listens here to cancel pending timers when driver responds
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   DriverTripAckQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.DriverCmdTripAccept, contracts.DriverCmdTripDecline},
+	}); err != nil {
+		return err
+	}
+
+	// Trip-service listens here to update trip status to "awaiting_driver"
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   DriverNotifiedQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.DriverEventDriverNotified},
+	}); err != nil {
+		return err
+	}
+
+	// API Gateway routes this to the driver via WebSocket when their request times out
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   DriverTripRequestExpiredQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.DriverCmdTripRequestExpired},
+	}); err != nil {
+		return err
+	}
+
 	if err := r.DeclareQueue(QueueConfig{
 		QueueName:   NotifyDriverNoDriversFoundQueue,
 		Exchanges:   []string{TripExchange},

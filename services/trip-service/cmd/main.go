@@ -105,6 +105,11 @@ func main() {
 			log.Fatalf("Failed to listen to driver messages: %v", err)
 		}
 	}()
+	go func() {
+		if err := driverConsumer.ListenForDriverNotified(); err != nil {
+			log.Fatalf("Failed to listen to driver_notified messages: %v", err)
+		}
+	}()
 
 	grpcServer := grpcserver.NewServer(tracing.WithTracingInterceptors()...)
 	grpc.NewGRPCHandler(grpcServer, svc, publisher)

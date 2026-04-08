@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { Trip } from "@/features/trip";
 
 import { WEBSOCKET_URL } from "@/shared/libs/constants";
-import type { ClientWsMessage, ServerWsMessage } from '@/shared/libs/contracts';
-import { BackendEndpoints, isValidTripEvent, isValidWsMessage, TripEvents } from '@/shared/libs/contracts';
+import type { ClientWsMessage } from '@/shared/libs/contracts';
+import { BackendEndpoints, TripEvents } from '@/shared/libs/contracts';
 
 import type { Driver } from "../models/types";
 
@@ -30,6 +30,9 @@ export const useDriverStreamConnection = ({
   const [error, setError] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const tripStatusRef = useRef(tripStatus);
 
   useEffect(() => {
 
@@ -46,31 +49,27 @@ export const useDriverStreamConnection = ({
     };
 
     websocket.onmessage = (event) => {
-      const message = JSON.parse(event.data) as ServerWsMessage;
-
-      if (!message || !isValidWsMessage(message)) {
-        setError(`Unknown message type "${message}", allowed types are: ${Object.values(TripEvents).join(', ')}`);
-        return;
-      }
+      const message = JSON.parse(event.data) as { type: string; data: any };
 
       switch (message.type) {
         case TripEvents.DriverTripRequest: {
-          const trip = (message.data?.trip) ?? message.data;
+          const trip = message.data?.trip ?? message.data;
           setRequestedTrip(trip);
+          setTripStatus(TripEvents.DriverTripRequest);
+          startCountdown(15);
           break;
         }
+        case TripEvents.DriverTripRequestExpired:
+          resetTripStatus();
+          break;
         case TripEvents.DriverRegister:
           setDriver(message.data);
           break;
         case 'driver.cmd.error':
           setError(`Registration failed: ${message.data as string}`);
           break;
-      }
-
-      if (isValidTripEvent(message.type)) {
-        setTripStatus(message.type);
-      } else {
-        setError(`Unknown message type "${message.type}", allowed types are: ${Object.values(TripEvents).join(', ')}`);
+        default:
+          console.warn(`Unhandled WS message type: "${message.type}"`);
       }
     };
 
@@ -86,6 +85,29 @@ export const useDriverStreamConnection = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userID, carId]);
 
+  const startCountdown = (seconds: number) => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setTimeRemaining(seconds);
+    countdownRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownRef.current!);
+          countdownRef.current = null;
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const stopCountdown = () => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setTimeRemaining(null);
+  };
+
   const sendMessage = (message: ClientWsMessage) => {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message));
@@ -95,9 +117,10 @@ export const useDriverStreamConnection = ({
   };
 
   const resetTripStatus = () => {
+    stopCountdown();
     setTripStatus(null);
     setRequestedTrip(null);
   };
 
-  return { error, tripStatus, driver, requestedTrip, resetTripStatus, sendMessage, setTripStatus };
+  return { error, tripStatus, driver, requestedTrip, timeRemaining, resetTripStatus, sendMessage, setTripStatus };
 };

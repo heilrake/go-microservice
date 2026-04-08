@@ -6,8 +6,7 @@ import type { Coordinate } from "@/features/trip";
 import type { Trip } from "@/features/trip";
 
 import { WEBSOCKET_URL } from "@/shared/libs/constants";
-import type { ServerWsMessage } from '@/shared/libs/contracts';
-import { BackendEndpoints, isValidWsMessage, TripEvents } from '@/shared/libs/contracts';
+import { BackendEndpoints, TripEvents } from '@/shared/libs/contracts';
 
 export function useRiderStreamConnection(location: Coordinate, userID: string) {
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -33,12 +32,7 @@ export function useRiderStreamConnection(location: Coordinate, userID: string) {
     };
 
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data) as ServerWsMessage;
-
-      if (!message || !isValidWsMessage(message)) {
-        setError(`Unknown message type "${message}", allowed types are: ${Object.values(TripEvents).join(', ')}`);
-        return;
-      }
+      const message = JSON.parse(event.data) as { type: string; data: any };
 
       switch (message.type) {
         case TripEvents.DriverLocation:
@@ -58,6 +52,8 @@ export function useRiderStreamConnection(location: Coordinate, userID: string) {
         case TripEvents.NoDriversFound:
           setTripStatus(message.type);
           break;
+        default:
+          console.warn(`Unhandled WS message type: "${message.type}"`);
       }
     };
 

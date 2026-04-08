@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet'
 import Image from 'next/image';
 import L from 'leaflet';
@@ -50,6 +50,14 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
     paymentSession,
     resetTripStatus
   } = useRiderStreamConnection(location, userID);
+
+  // If the logged-in user changes, stale fares belong to the old user — reset
+  useEffect(() => {
+    if (userID) {
+      setTrip(null);
+      setDestination(null);
+    }
+  }, [userID]);
 
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
     if (trip?.tripID) {
@@ -108,7 +116,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   const handleStartTrip = async (fare: RouteFare) => {
     const payload = {
       rideFareID: fare.id,
-      userID: userID,
+      userID: fare.userID || userID,
     } as HTTPTripStartRequestPayload
 
     setSelectedCarType(fare.packageSlug)

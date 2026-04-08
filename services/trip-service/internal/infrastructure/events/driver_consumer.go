@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
+
 	"ride-sharing/services/trip-service/internal/domain"
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/messaging"
@@ -15,8 +17,9 @@ import (
 )
 
 type DriverConsumer struct {
-	rabbitmq *messaging.RabbitMQ
-	service  domain.TripService
+	rabbitmq    *messaging.RabbitMQ
+	service     domain.TripService
+	retryCounts sync.Map // tripID → int
 }
 
 func NewDriverConsumer(rabbitmq *messaging.RabbitMQ, service domain.TripService) *DriverConsumer {
@@ -40,8 +43,6 @@ func (c *DriverConsumer) Listen() error {
 			return err
 		}
 
-		log.Printf("driver response received message: %+v", payload)
-
 		switch msg.RoutingKey {
 		case contracts.DriverCmdTripAccept:
 			if err := c.handleTripAccepted(ctx, payload.TripID, payload.Driver); err != nil {
@@ -53,9 +54,35 @@ func (c *DriverConsumer) Listen() error {
 				log.Printf("Failed to handle the trip decline: %v", err)
 				return err
 			}
-			return nil
 		default:
 			log.Printf("unknown trip event: %+v", payload)
+		}
+
+		return nil
+	})
+}
+
+// ListenForDriverNotified listens for the event published by driver-service when a driver
+// has been selected and notified, and updates the trip status to "awaiting_driver".
+func (c *DriverConsumer) ListenForDriverNotified() error {
+	return consumers.NewFindDriversConsumer(c.rabbitmq).Consume(messaging.DriverNotifiedQueue, func(ctx context.Context, msg amqp091.Delivery) error {
+		var message contracts.AmqpMessage
+		if err := json.Unmarshal(msg.Body, &message); err != nil {
+			log.Printf("Failed to unmarshal driver_notified message: %v", err)
+			return err
+		}
+
+		var payload messaging.DriverNotifiedData
+		if err := json.Unmarshal(message.Data, &payload); err != nil {
+			log.Printf("Failed to unmarshal driver_notified payload: %v", err)
+			return err
+		}
+
+		log.Printf("Driver notified for trip %s — updating status to awaiting_driver", payload.TripID)
+
+		if err := c.service.UpdateTrip(ctx, payload.TripID, "awaiting_driver", nil); err != nil {
+			log.Printf("Failed to update trip %s status: %v", payload.TripID, err)
+			return err
 		}
 
 		return nil
@@ -71,6 +98,14 @@ func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 	if trip == nil {
 		return fmt.Errorf("Trip was not found %s", tripID)
 	}
+
+	// Guard: if trip is already assigned (e.g. timeout fired after driver accepted), skip
+	if trip.Status == "assigned" {
+		log.Printf("Trip %s is already assigned — ignoring duplicate accept", tripID)
+		return nil
+	}
+
+	c.retryCounts.Delete(tripID)
 
 	if err := c.service.UpdateTrip(ctx, tripID, "assigned", driver); err != nil {
 		return err
@@ -101,6 +136,9 @@ func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 		Amount:   int64(trip.RideFare.TotalPriceInCents),
 		Currency: "USD",
 	})
+	if err != nil {
+		return err
+	}
 
 	if err := c.rabbitmq.PublishMessage(ctx, contracts.PaymentCmdCreateSession,
 		contracts.AmqpMessage{
@@ -115,15 +153,29 @@ func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 }
 
 func (c *DriverConsumer) handleTripDeclined(ctx context.Context, tripID string, riderID string) error {
-	// When a driver declines, we should try to find another driver
-
 	trip, err := c.service.GetTripByID(ctx, tripID)
 	if err != nil {
 		return err
 	}
 
+	// Guard: if trip is already assigned (race between decline and accept), skip re-search
+	if trip.Status == "assigned" {
+		log.Printf("Trip %s is already assigned — ignoring late decline", tripID)
+		return nil
+	}
+
+	retryCount := 0
+	if v, ok := c.retryCounts.Load(tripID); ok {
+		retryCount = v.(int)
+	}
+	retryCount++
+	c.retryCounts.Store(tripID, retryCount)
+
+	log.Printf("Trip %s declined — retry attempt %d", tripID, retryCount)
+
 	newPayload := messaging.TripEventData{
-		Trip: trip.ToProto(),
+		Trip:       trip.ToProto(),
+		RetryCount: retryCount,
 	}
 
 	marshalledEvent, err := json.Marshal(newPayload)
@@ -131,7 +183,6 @@ func (c *DriverConsumer) handleTripDeclined(ctx context.Context, tripID string, 
 		return err
 	}
 
-	// Notify the rider that the trip has been declined
 	if err := c.rabbitmq.PublishMessage(ctx, contracts.TripEventDriverNotInterested, contracts.AmqpMessage{
 		OwnerID: riderID,
 		Data:    marshalledEvent,

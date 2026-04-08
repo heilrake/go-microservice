@@ -35,7 +35,7 @@ export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) 
     [riderLocation?.latitude, riderLocation?.longitude],
   );
 
-  const { error, driver, tripStatus, requestedTrip, sendMessage, setTripStatus, resetTripStatus } =
+  const { error, driver, tripStatus, requestedTrip, timeRemaining, sendMessage, setTripStatus, resetTripStatus } =
     useDriverStreamConnection({
       location: riderLocation,
       geohash: driverGeohash,
@@ -67,6 +67,7 @@ export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) 
       },
     });
 
+    resetTripStatus();
     setTripStatus(TripEvents.DriverTripAccept);
   };
 
@@ -115,6 +116,9 @@ export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) 
     return <div>Error: {error}</div>;
   }
 
+  console.log("requestedTrip", requestedTrip)
+  console.log("tripStatus",tripStatus)
+
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
       <div className="flex-1">
@@ -162,6 +166,7 @@ export const DriverMap = ({ carId, userID }: { carId: string; userID: string }) 
           <DriverTripOverview
             trip={requestedTrip}
             status={tripStatus}
+            timeRemaining={timeRemaining}
             onAcceptTrip={handleAcceptTrip}
             onDeclineTrip={handleDeclineTrip}
           />

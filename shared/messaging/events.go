@@ -10,6 +10,9 @@ const (
 	FindAvailableDriversQueue        = "find_available_drivers"
 	DriverCmdTripRequestQueue        = "driver_cmd_trip_request"
 	DriverTripResponseQueue          = "driver_trip_response"
+	DriverTripAckQueue               = "driver_trip_ack"
+	DriverNotifiedQueue              = "driver_notified"
+	DriverTripRequestExpiredQueue    = "driver_trip_request_expired"
 	NotifyDriverNoDriversFoundQueue  = "notify_driver_no_drivers_found"
 	NotifyDriverAssignmentQueue      = "notify_driver_assignment"
 	PaymentTripResponseQueue         = "payment_trip_response"
@@ -18,7 +21,8 @@ const (
 )
 
 type TripEventData struct {
-	Trip *pb.Trip `json:"trip"`
+	Trip       *pb.Trip `json:"trip"`
+	RetryCount int      `json:"retryCount"`
 }
 
 type DriverTripResponseData struct {
@@ -51,4 +55,9 @@ type PaymentStatusUpdateData struct {
 
 type UserEventData struct {
 	User *pbu.User `json:"user"`
+}
+
+type DriverNotifiedData struct {
+	TripID  string `json:"tripID"`
+	RiderID string `json:"riderID"`
 }

@@ -43,14 +43,74 @@ flowchart TD
     %% RabbitMQ publish
     REST -->|"publish: payment.success"| MQ
 
-    %% RabbitMQ consume (WebSocket hub forwards to connected clients)
+    %% WebSocket hub: routes MQ messages to connected clients by ownerID
     WS -->|"consume: driver.cmd.trip_request\nnotify.driver.no_drivers\nnotify.driver.assignment\nnotify.payment.session"| MQ
 
+    %% Driver WebSocket → RabbitMQ (accept / decline)
+    WS -->|"publish: driver.cmd.trip_accept\ndriver.cmd.trip_decline"| MQ
+
     %% Internal service events
-    TripSvc -->|"publish: trip events"| MQ
-    PaySvc  -->|"publish: payment.session.created"| MQ
+    TripSvc -->|"publish: trip.event.created"| MQ
+    PaySvc  -->|"publish: payment.event.session_created"| MQ
     MQ      -->|"consume"| PaySvc
-    MQ      -->|"consume"| TripSvc
+
+    %% Driver-service: find & notify flow
+    MQ -->|"find_available_drivers\n(trip.event.created\ntrip.event.driver_not_interested)"| DriverSvc
+    DriverSvc -->|"publish: driver.cmd.trip_request"| MQ
+    DriverSvc -->|"publish: driver.event.driver_notified"| MQ
+
+    %% Trip-service: driver response flow
+    MQ -->|"driver_trip_response\n(driver.cmd.trip_accept\ndriver.cmd.trip_decline)"| TripSvc
+    MQ -->|"driver_notified\n(driver.event.driver_notified)"| TripSvc
+    TripSvc -->|"publish: trip.event.driver_assigned\npayment.cmd.create_session\ntrip.event.driver_not_interested"| MQ
+
+    %% Driver-service: ack queue (cancel 15s timer)
+    MQ -->|"driver_trip_ack\n(driver.cmd.trip_accept\ndriver.cmd.trip_decline)"| DriverSvc
+
+    %% API Gateway routes expired notification to driver via WebSocket
+    DriverSvc -->|"publish: driver.cmd.trip_request_expired"| MQ
+    MQ -->|"driver_trip_request_expired"| GW
+```
+
+## Driver Accept/Decline Flow (15s timeout)
+
+```mermaid
+sequenceDiagram
+    participant Rider
+    participant TripSvc as Trip Service
+    participant MQ as RabbitMQ
+    participant DriverSvc as Driver Service
+    participant GW as API Gateway
+    participant Driver
+
+    Rider->>TripSvc: CreateTrip
+    TripSvc->>MQ: trip.event.created [status: pending]
+    MQ->>DriverSvc: find_available_drivers
+    DriverSvc->>MQ: driver.cmd.trip_request (ownerID=driverUserID)
+    DriverSvc->>MQ: driver.event.driver_notified {tripID}
+    MQ->>GW: driver.cmd.trip_request → WS
+    GW->>Driver: WebSocket: trip request
+    MQ->>TripSvc: driver_notified → status: awaiting_driver
+
+    alt Driver accepts within 15s
+        Driver->>GW: WS: driver.cmd.trip_accept
+        GW->>MQ: driver.cmd.trip_accept
+        MQ->>DriverSvc: driver_trip_ack → cancel timer
+        MQ->>TripSvc: driver_trip_response → status: assigned
+        TripSvc->>MQ: trip.event.driver_assigned + payment.cmd.create_session
+    else Driver declines within 15s
+        Driver->>GW: WS: driver.cmd.trip_decline
+        GW->>MQ: driver.cmd.trip_decline
+        MQ->>DriverSvc: driver_trip_ack → cancel timer
+        MQ->>TripSvc: driver_trip_response → re-publish trip.event.driver_not_interested
+        MQ->>DriverSvc: find_available_drivers → next driver
+    else 15s timeout (no response)
+        DriverSvc->>MQ: driver.cmd.trip_request_expired (ownerID=driverUserID)
+        DriverSvc->>MQ: trip.event.driver_not_interested
+        MQ->>GW: driver_trip_request_expired → WS
+        GW->>Driver: WebSocket: request expired → UI resets
+        MQ->>DriverSvc: find_available_drivers → next driver
+    end
 ```
 
 ## Ports
@@ -70,13 +130,27 @@ flowchart TD
 
 ## RabbitMQ Queues
 
-| Queue                              | Producer        | Consumer         | Payload                          |
-|------------------------------------|-----------------|------------------|----------------------------------|
-| `driver.cmd.trip_request`          | Trip Service    | API GW → Driver  | trip request for nearby drivers  |
-| `notify.driver.no_drivers_found`   | Trip Service    | API GW → Rider   | no available drivers             |
-| `notify.driver.assignment`         | Trip Service    | API GW → Driver  | driver assigned to trip          |
-| `notify.payment.session_created`   | Payment Service | API GW → Rider   | Stripe checkout URL              |
-| `payment.success` (exchange)       | API Gateway     | Payment Service  | Stripe checkout completed        |
+| Queue                          | Routing key(s)                                          | Producer        | Consumer                      |
+|--------------------------------|---------------------------------------------------------|-----------------|-------------------------------|
+| `find_available_drivers`       | `trip.event.created`, `trip.event.driver_not_interested`| Trip Svc / Driver Svc | Driver Service          |
+| `driver_cmd_trip_request`      | `driver.cmd.trip_request`                               | Driver Service  | API GW → Driver WS            |
+| `driver_trip_response`         | `driver.cmd.trip_accept`, `driver.cmd.trip_decline`     | API Gateway     | Trip Service                  |
+| `driver_trip_ack`              | `driver.cmd.trip_accept`, `driver.cmd.trip_decline`     | API Gateway     | Driver Service (cancel timer) |
+| `driver_notified`              | `driver.event.driver_notified`                          | Driver Service  | Trip Service (status update)  |
+| `driver_trip_request_expired`  | `driver.cmd.trip_request_expired`                       | Driver Service  | API GW → Driver WS → reset UI |
+| `notify_driver_no_drivers`     | `trip.event.no_drivers_found`                           | Driver Service  | API GW → Rider WS             |
+| `notify_driver_assignment`     | `trip.event.driver_assigned`                            | Trip Service    | API GW → Rider WS             |
+| `notify_payment_session`       | `payment.event.session_created`                         | Payment Service | API GW → Rider WS             |
+| `payment_trip_response`        | `payment.cmd.create_session`                            | Trip Service    | Payment Service               |
+
+## Trip Status Flow
+
+| Status             | Transition                                          |
+|--------------------|-----------------------------------------------------|
+| `pending`          | Trip created                                        |
+| `awaiting_driver`  | Driver notified (`driver.event.driver_notified`)    |
+| `awaiting_driver`  | Next driver notified (after decline / timeout)      |
+| `assigned`         | Driver accepted (`driver.cmd.trip_accept`)          |
 
 ## gRPC Methods
 

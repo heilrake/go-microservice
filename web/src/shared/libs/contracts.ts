@@ -35,6 +35,7 @@ export const TripEvents = {
   DriverTripRequest: "driver.cmd.trip_request",
   DriverTripAccept: "driver.cmd.trip_accept",
   DriverTripDecline: "driver.cmd.trip_decline",
+  DriverTripRequestExpired: "driver.cmd.trip_request_expired",
   DriverRegister: "driver.cmd.register",
   PaymentSessionCreated: "payment.event.session_created",
 } as const;
@@ -47,6 +48,7 @@ export type ServerWsMessage =
   | DriverAssignedRequest
   | DriverLocationRequest
   | DriverTripRequest
+  | DriverTripRequestExpiredNotification
   | DriverRegisterRequest
   | TripCreatedRequest
   | NoDriversFoundRequest;
@@ -70,6 +72,10 @@ type DriverRegisterRequest = {
 type DriverTripRequest = {
   type: typeof TripEvents.DriverTripRequest;
   data: Trip;
+}
+
+type DriverTripRequestExpiredNotification = {
+  type: typeof TripEvents.DriverTripRequestExpired;
 }
 
 export type PaymentEventSessionCreatedData = {

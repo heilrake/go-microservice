@@ -16,6 +16,7 @@ export type Route = {
 
 export type RouteFare = {
   id: string,
+  userID: string,
   packageSlug: CarPackageSlugType,
   basePrice: number,
   totalPriceInCents?: number,

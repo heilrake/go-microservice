@@ -105,6 +105,11 @@ func main() {
 			log.Fatalf("Failed to listen to the message: %v", err)
 		}
 	}()
+	go func() {
+		if err := consumer.ListenForAck(); err != nil {
+			log.Fatalf("Failed to listen to driver ack messages: %v", err)
+		}
+	}()
 
 	// Create the service and register the gRPC handler
 

@@ -68,6 +68,7 @@ func main() {
 	// Start queue consumers once at startup — they route messages by ownerID via connManager
 	for _, q := range []string{
 		messaging.DriverCmdTripRequestQueue,
+		messaging.DriverTripRequestExpiredQueue,
 		messaging.NotifyDriverNoDriversFoundQueue,
 		messaging.NotifyDriverAssignmentQueue,
 		messaging.NotifyPaymentSessionCreatedQueue,
