@@ -33,6 +33,10 @@ export const RiderTripOverview = ({
   onPackageSelect,
   onCancel,
 }: TripOverviewProps) => {
+
+  console.log("trip.rideFares", trip)
+    
+  
   if (!trip) {
     return (
       <TripOverviewCard
@@ -41,6 +45,7 @@ export const RiderTripOverview = ({
       />
     )
   }
+
 
   if (status === TripEvents.PaymentSessionCreated && paymentSession) {
     return (

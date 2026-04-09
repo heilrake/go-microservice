@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 
+import { authApi } from '@/shared/api';
+
 export function LogoutButton({ className }: { className?: string }) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await authApi.logout();
     router.push('/');
   };
 

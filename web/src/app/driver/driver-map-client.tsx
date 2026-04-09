@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic"
 
-const DriverMap = dynamic(() => import("@/features/driver/ui/driver-map").then(mod => mod.DriverMap), { ssr: false })
+const DriverMapWidget = dynamic(() => import("@/widgets/driver-map-widget").then(mod => mod.DriverMapWidget), { ssr: false })
 
 export function DriverMapClient({ carId, userID }: { carId: string; userID: string }) {
-  return <DriverMap carId={carId} userID={userID} />
+  return <DriverMapWidget carId={carId} userID={userID} />
 }

@@ -1,9 +1,8 @@
 "use client"
 import dynamic from "next/dynamic"
 
-
-const RiderMap = dynamic(() => import("@/features/rider/ui/rider-map"), { ssr: false })
+const RiderMapWidget = dynamic(() => import("@/widgets/rider-map-widget").then(mod => mod.RiderMapWidget), { ssr: false })
 
 export default function RidePage() {
-  return <RiderMap />
+  return <RiderMapWidget />
 }
