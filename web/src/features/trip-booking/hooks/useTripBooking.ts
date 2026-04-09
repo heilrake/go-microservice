@@ -66,5 +66,10 @@ export function useTripBooking(userID: string, location: Location) {
     setSelectedCarType(null)
   }
 
-  return { trip, destination, selectedCarType, handleMapClick, startTrip, reset }
+  const resetTripID = () => {
+    setTrip(prev => prev ? { ...prev, tripID: '' } : prev)
+    setSelectedCarType(null)
+  }
+
+  return { trip, destination, selectedCarType, handleMapClick, startTrip, reset, resetTripID }
 }

@@ -34,8 +34,8 @@ export const RiderTripOverview = ({
   onCancel,
 }: TripOverviewProps) => {
 
-  console.log("trip.rideFares", trip)
-    
+  console.log("trip", trip);
+  console.log("status", status);
   
   if (!trip) {
     return (
@@ -120,7 +120,7 @@ export const RiderTripOverview = ({
     )
   }
 
-  if (status === TripEvents.Created) {
+  if (status === TripEvents.Created || (!!trip.tripID && !status)) {
     return (
       <TripOverviewCard
         title="Looking for a driver"
@@ -158,10 +158,5 @@ export const RiderTripOverview = ({
     )
   }
 
-  return (
-    <Card className="w-full md:max-w-[500px] z-[9999] flex-[0.3]">
-      No trip ride fares, please refresh the page
-    </Card>
-  )
 }
 

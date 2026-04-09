@@ -12,6 +12,7 @@ import { useTripBooking } from '@/features/trip-booking'
 
 import { authApi } from '@/shared/api'
 import { LogoutButton } from '@/shared/ui/logout-button'
+import { WsEventType } from '@/shared/ws'
 
 const LOCATION = { latitude: 49.438280, longitude: 32.060711 }
 
@@ -26,6 +27,16 @@ export function RiderMapWidget() {
 
   const events = useRiderEvents(userID)
   const booking = useTripBooking(userID, LOCATION)
+
+  const handleCancel = () => {
+    if (events.tripStatus === WsEventType.NoDriversFound) {
+      events.reset()
+      booking.resetTripID()
+    } else {
+      events.reset()
+      booking.reset()
+    }
+  }
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
@@ -86,7 +97,7 @@ export function RiderMapWidget() {
           paymentSession={events.paymentSession}
           selectedCarType={booking.selectedCarType}
           onPackageSelect={booking.startTrip}
-          onCancel={events.reset}
+          onCancel={handleCancel}
         />
       </div>
     </div>

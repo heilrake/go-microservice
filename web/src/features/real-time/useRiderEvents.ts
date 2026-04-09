@@ -69,6 +69,7 @@ export function useRiderEvents(userID: string) {
   const reset = () => {
     setState(prev => ({ ...prev, tripStatus: null, paymentSession: null }))
   }
+  console.log("state", state)
 
   return { ...state, reset }
 }

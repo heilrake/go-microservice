@@ -91,6 +91,12 @@ func handleTripStart(app *Clients) http.HandlerFunc {
 			return
 		}
 
+		// Notify the rider via WebSocket that the trip was created and driver search has begun
+		_ = connManager.SendMessage(requestBody.UserID, contracts.WSMessage{
+			Type: contracts.TripEventCreated,
+			Data: map[string]string{"tripID": tripStart.TripID},
+		})
+
 		response := contracts.APIResponse{Data: tripStart}
 
 		fmt.Printf("response %v\n", response)

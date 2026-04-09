@@ -93,6 +93,15 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		return err
 	}
 
+	// Trip-service listens here to update trip status when no drivers are found
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   TripSearchFailedQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.TripEventNoDriversFound},
+	}); err != nil {
+		return err
+	}
+
 	if err := r.DeclareQueue(QueueConfig{
 		QueueName:   NotifyDriverAssignmentQueue,
 		Exchanges:   []string{TripExchange},

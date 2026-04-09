@@ -103,8 +103,17 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 	if payload.RetryCount >= maxSearchAttempts {
 		log.Printf("Trip %s exceeded max search attempts (%d) — giving up", payload.Trip.GetId(), maxSearchAttempts)
 		span.AddEvent("max_attempts_exceeded")
+		noDriversData, err := json.Marshal(messaging.NoDriversFoundData{
+			TripID:  payload.Trip.GetId(),
+			RiderID: payload.Trip.GetUserID(),
+		})
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
 		if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
 			OwnerID: payload.Trip.UserID,
+			Data:    noDriversData,
 		}); err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			return err
@@ -136,8 +145,17 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 
 	if len(suitableDrivers) == 0 {
 		span.AddEvent("no_drivers_found")
+		noDriversData, err := json.Marshal(messaging.NoDriversFoundData{
+			TripID:  payload.Trip.GetId(),
+			RiderID: payload.Trip.GetUserID(),
+		})
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
 		if err := tripPublishers.NewTripPublisher(c.rabbitmq).Publish(ctx, contracts.TripEventNoDriversFound, contracts.AmqpMessage{
 			OwnerID: payload.Trip.UserID,
+			Data:    noDriversData,
 		}); err != nil {
 			log.Printf("Failed to publish message to exchange: %v", err)
 			span.SetStatus(codes.Error, err.Error())

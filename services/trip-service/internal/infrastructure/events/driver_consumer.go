@@ -89,6 +89,35 @@ func (c *DriverConsumer) ListenForDriverNotified() error {
 	})
 }
 
+// ListenForNoDriversFound listens for the event published by driver-service when
+// no drivers could be found, and marks the trip as "cancelled" in the DB.
+func (c *DriverConsumer) ListenForNoDriversFound() error {
+	return consumers.NewFindDriversConsumer(c.rabbitmq).Consume(messaging.TripSearchFailedQueue, func(ctx context.Context, msg amqp091.Delivery) error {
+		var message contracts.AmqpMessage
+		if err := json.Unmarshal(msg.Body, &message); err != nil {
+			log.Printf("Failed to unmarshal no_drivers_found message: %v", err)
+			return err
+		}
+
+		var payload messaging.NoDriversFoundData
+		if err := json.Unmarshal(message.Data, &payload); err != nil {
+			log.Printf("Failed to unmarshal no_drivers_found payload: %v", err)
+			return err
+		}
+
+		log.Printf("No drivers found for trip %s — updating status to cancelled", payload.TripID)
+
+		c.retryCounts.Delete(payload.TripID)
+
+		if err := c.service.UpdateTrip(ctx, payload.TripID, "cancelled", nil); err != nil {
+			log.Printf("Failed to update trip %s status to cancelled: %v", payload.TripID, err)
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, driver *pbd.Driver) error {
 	trip, err := c.service.GetTripByID(ctx, tripID)
 	if err != nil {

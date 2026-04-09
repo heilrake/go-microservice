@@ -51,6 +51,7 @@ flowchart TD
 
     %% Internal service events
     TripSvc -->|"publish: trip.event.created"| MQ
+    REST -->|"WS push: trip.event.created → rider"| WS
     PaySvc  -->|"publish: payment.event.session_created"| MQ
     MQ      -->|"consume"| PaySvc
 
@@ -62,6 +63,7 @@ flowchart TD
     %% Trip-service: driver response flow
     MQ -->|"driver_trip_response\n(driver.cmd.trip_accept\ndriver.cmd.trip_decline)"| TripSvc
     MQ -->|"driver_notified\n(driver.event.driver_notified)"| TripSvc
+    MQ -->|"trip_search_failed\n(trip.event.no_drivers_found)"| TripSvc
     TripSvc -->|"publish: trip.event.driver_assigned\npayment.cmd.create_session\ntrip.event.driver_not_interested"| MQ
 
     %% Driver-service: ack queue (cancel 15s timer)
@@ -83,7 +85,8 @@ sequenceDiagram
     participant GW as API Gateway
     participant Driver
 
-    Rider->>TripSvc: CreateTrip
+    Rider->>TripSvc: CreateTrip (via GW REST)
+    GW->>Rider: WS push: trip.event.created → UI shows spinner
     TripSvc->>MQ: trip.event.created [status: pending]
     MQ->>DriverSvc: find_available_drivers
     DriverSvc->>MQ: driver.cmd.trip_request (ownerID=driverUserID)
@@ -98,6 +101,10 @@ sequenceDiagram
         MQ->>DriverSvc: driver_trip_ack → cancel timer
         MQ->>TripSvc: driver_trip_response → status: assigned
         TripSvc->>MQ: trip.event.driver_assigned + payment.cmd.create_session
+    else No drivers available / max retries exceeded
+        DriverSvc->>MQ: trip.event.no_drivers_found {tripID, riderID}
+        MQ->>GW: notify_driver_no_drivers → WS (Rider UI: "No drivers found")
+        MQ->>TripSvc: trip_search_failed → status: cancelled
     else Driver declines within 15s
         Driver->>GW: WS: driver.cmd.trip_decline
         GW->>MQ: driver.cmd.trip_decline
@@ -139,6 +146,7 @@ sequenceDiagram
 | `driver_notified`              | `driver.event.driver_notified`                          | Driver Service  | Trip Service (status update)  |
 | `driver_trip_request_expired`  | `driver.cmd.trip_request_expired`                       | Driver Service  | API GW → Driver WS → reset UI |
 | `notify_driver_no_drivers`     | `trip.event.no_drivers_found`                           | Driver Service  | API GW → Rider WS             |
+| `trip_search_failed`           | `trip.event.no_drivers_found`                           | Driver Service  | Trip Service (status: cancelled) |
 | `notify_driver_assignment`     | `trip.event.driver_assigned`                            | Trip Service    | API GW → Rider WS             |
 | `notify_payment_session`       | `payment.event.session_created`                         | Payment Service | API GW → Rider WS             |
 | `payment_trip_response`        | `payment.cmd.create_session`                            | Trip Service    | Payment Service               |
@@ -151,6 +159,7 @@ sequenceDiagram
 | `awaiting_driver`  | Driver notified (`driver.event.driver_notified`)    |
 | `awaiting_driver`  | Next driver notified (after decline / timeout)      |
 | `assigned`         | Driver accepted (`driver.cmd.trip_accept`)          |
+| `cancelled`        | No drivers found (`trip.event.no_drivers_found`)    |
 
 ## gRPC Methods
 

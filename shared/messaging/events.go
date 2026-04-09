@@ -14,6 +14,7 @@ const (
 	DriverNotifiedQueue              = "driver_notified"
 	DriverTripRequestExpiredQueue    = "driver_trip_request_expired"
 	NotifyDriverNoDriversFoundQueue  = "notify_driver_no_drivers_found"
+	TripSearchFailedQueue            = "trip_search_failed"
 	NotifyDriverAssignmentQueue      = "notify_driver_assignment"
 	PaymentTripResponseQueue         = "payment_trip_response"
 	NotifyPaymentSessionCreatedQueue = "notify_payment_session_created"
@@ -58,6 +59,11 @@ type UserEventData struct {
 }
 
 type DriverNotifiedData struct {
+	TripID  string `json:"tripID"`
+	RiderID string `json:"riderID"`
+}
+
+type NoDriversFoundData struct {
 	TripID  string `json:"tripID"`
 	RiderID string `json:"riderID"`
 }
