@@ -11,8 +11,9 @@ import (
 	"ride-sharing/shared/contracts"
 	"ride-sharing/shared/env"
 	"ride-sharing/shared/messaging"
-	pb "ride-sharing/shared/proto/user"
+	paymentpb "ride-sharing/shared/proto/payment"
 	driverpb "ride-sharing/shared/proto/driver"
+	pb "ride-sharing/shared/proto/user"
 	"ride-sharing/shared/tracing"
 
 	"github.com/stripe/stripe-go/v81"
@@ -84,24 +85,74 @@ func handleTripStart(app *Clients) http.HandlerFunc {
 			return
 		}
 
-		tripStart, err := app.TripClient.Client.CreateTrip(ctx, requestBody.toProto())
+		trip, err := app.TripClient.Client.CreateTrip(ctx, requestBody.toProto())
 		if err != nil {
 			log.Printf("Failed to start a trip: %v", err)
 			http.Error(w, "Failed to start trip", http.StatusInternalServerError)
 			return
 		}
 
-		// Notify the rider via WebSocket that the trip was created and driver search has begun
+		paymentResp, err := app.PaymentClient.Client.CreatePaymentIntent(ctx, &paymentpb.CreatePaymentIntentRequest{
+			TripID:        trip.GetTripID(),
+			UserID:        trip.GetUserID(),
+			AmountInCents: trip.GetAmountInCents(),
+			Currency:      trip.GetCurrency(),
+		})
+		if err != nil {
+			log.Printf("Failed to create payment intent for trip %s: %v", trip.TripID, err)
+			http.Error(w, "Failed to create payment intent", http.StatusInternalServerError)
+			return
+		}
+
+		writeJson(w, http.StatusCreated, contracts.APIResponse{
+			Data: map[string]string{
+				"tripID":       trip.TripID,
+				"clientSecret": paymentResp.ClientSecret,
+			},
+		})
+	}
+}
+
+// handleTripCancel godoc
+// @Summary      Cancel trip
+// @Description  Cancel a trip
+// @Tags         trips
+// @Accept       json
+// @Produce      json
+// @Param        body body cancelTripRequest true "User ID"
+// @Success      200  {object}  contracts.APIResponse  "Cancelled trip"
+// @Failure      400  {string}  string                 "Invalid JSON"
+// @Failure      500  {string}  string                 "Internal error"
+// @Router       /trip/cancel [post]
+func handleTripCancel(app *Clients) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "handleTripCancel")
+		defer span.End()
+
+		var requestBody cancelTripRequest
+
+		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+			http.Error(w, "failed to parse JSON data", http.StatusBadRequest)
+			return
+		}
+
+		_, err := app.TripClient.Client.CancelTrip(ctx, requestBody.toProto())
+		if err != nil {
+			log.Printf("Failed to cancel a trip: %v", err)
+			http.Error(w, "Failed to cancel trip", http.StatusInternalServerError)
+			return
+		}
+
+		// Notify the rider via WebSocket that the trip was cancelled
 		_ = connManager.SendMessage(requestBody.UserID, contracts.WSMessage{
-			Type: contracts.TripEventCreated,
-			Data: map[string]string{"tripID": tripStart.TripID},
+			Type: contracts.TripEventCancelled,
+			Data: map[string]string{"UserID": requestBody.UserID},
 		})
 
-		response := contracts.APIResponse{Data: tripStart}
-
+		response := contracts.APIResponse{Data: requestBody.UserID}
 		fmt.Printf("response %v\n", response)
 
-		writeJson(w, http.StatusCreated, response)
+		writeJson(w, http.StatusOK, response)
 	}
 }
 

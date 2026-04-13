@@ -8,6 +8,7 @@ export const WsEventType = {
   DriverLocation: 'driver.cmd.location',
   // Trip lifecycle
   TripCreated: 'trip.event.created',
+  TripCompleted: 'trip.event.completed',
   NoDriversFound: 'trip.event.no_drivers_found',
   DriverAssigned: 'trip.event.driver_assigned',
   // Driver-side events
@@ -24,6 +25,7 @@ export type WsEventType = typeof WsEventType[keyof typeof WsEventType]
 export type WsEventPayloadMap = {
   [WsEventType.DriverLocation]: Driver[]
   [WsEventType.TripCreated]: Trip
+  [WsEventType.TripCompleted]: { tripID: string }
   [WsEventType.NoDriversFound]: undefined
   [WsEventType.DriverAssigned]: Trip
   [WsEventType.DriverTripRequest]: Trip

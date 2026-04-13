@@ -12,6 +12,11 @@ definitions:
       error:
         $ref: '#/definitions/contracts.APIError'
     type: object
+  main.cancelTripRequest:
+    properties:
+      userID:
+        type: string
+    type: object
   main.createCarRequest:
     properties:
       car_plate:
@@ -287,6 +292,36 @@ paths:
       summary: Add car
       tags:
       - drivers
+  /trip/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a trip
+      parameters:
+      - description: User ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.cancelTripRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cancelled trip
+          schema:
+            $ref: '#/definitions/contracts.APIResponse'
+        "400":
+          description: Invalid JSON
+          schema:
+            type: string
+        "500":
+          description: Internal error
+          schema:
+            type: string
+      summary: Cancel trip
+      tags:
+      - trips
   /trip/preview:
     post:
       consumes:

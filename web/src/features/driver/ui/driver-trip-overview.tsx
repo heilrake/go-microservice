@@ -6,13 +6,35 @@ import { Button } from "@/shared/ui/button"
 
 type DriverTripOverviewProps = {
   trip?: Trip | null,
+  acceptedTrip?: Trip | null,
   status?: TripEventType | null,
   timeRemaining?: number | null,
   onAcceptTrip?: () => void,
-  onDeclineTrip?: () => void
+  onDeclineTrip?: () => void,
+  onCompleteTrip?: () => void,
 }
 
-export const DriverTripOverview = ({ trip, status, timeRemaining, onAcceptTrip, onDeclineTrip }: DriverTripOverviewProps) => {
+export const DriverTripOverview = ({ trip, acceptedTrip, status, timeRemaining, onAcceptTrip, onDeclineTrip, onCompleteTrip }: DriverTripOverviewProps) => {
+  if (acceptedTrip) {
+    return (
+      <TripOverviewCard
+        title="Trip in progress"
+        description="You are on your way to the destination"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-500">
+              Trip ID: {acceptedTrip.id}
+              <br />
+              Rider ID: {acceptedTrip.userID}
+            </p>
+          </div>
+          <Button onClick={onCompleteTrip}>Complete trip</Button>
+        </div>
+      </TripOverviewCard>
+    )
+  }
+
   if (!trip) {
     return (
       <TripOverviewCard
@@ -54,26 +76,6 @@ export const DriverTripOverview = ({ trip, status, timeRemaining, onAcceptTrip, 
           ) : (
             <p className="text-sm text-center text-gray-400">Time expired — waiting for next assignment</p>
           )}
-        </div>
-      </TripOverviewCard>
-    )
-  }
-
-  if (status === TripEvents.DriverTripAccept) {
-    return (
-      <TripOverviewCard
-        title="All set!"
-        description="You can now start the trip"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-lg font-bold">Trip details</h3>
-            <p className="text-sm text-gray-500">
-              Trip ID: {trip.id}
-              <br />
-              Rider ID: {trip.userID}
-            </p>
-          </div>
         </div>
       </TripOverviewCard>
     )

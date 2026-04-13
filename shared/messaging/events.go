@@ -17,6 +17,8 @@ const (
 	TripSearchFailedQueue            = "trip_search_failed"
 	NotifyDriverAssignmentQueue      = "notify_driver_assignment"
 	PaymentTripResponseQueue         = "payment_trip_response"
+	PaymentCaptureQueue              = "payment_capture"
+	PaymentCancelQueue               = "payment_cancel"
 	NotifyPaymentSessionCreatedQueue = "notify_payment_session_created"
 	NotifyPaymentSuccessQueue        = "notify_payment_success"
 )
@@ -66,4 +68,9 @@ type DriverNotifiedData struct {
 type NoDriversFoundData struct {
 	TripID  string `json:"tripID"`
 	RiderID string `json:"riderID"`
+}
+
+type TripCompletedData struct {
+	TripID string `json:"tripID"`
+	UserID string `json:"userID"`
 }

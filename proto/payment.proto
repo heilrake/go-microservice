@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "shared/proto/payment;payment";
+
+service PaymentService {
+  rpc CreatePaymentIntent(CreatePaymentIntentRequest) returns (CreatePaymentIntentResponse);
+}
+
+message CreatePaymentIntentRequest {
+  string tripID = 1;
+  string userID = 2;
+  int64 amountInCents = 3;
+  string currency = 4;
+}
+
+message CreatePaymentIntentResponse {
+  string paymentIntentID = 1;
+  string clientSecret = 2;
+}

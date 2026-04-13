@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"ride-sharing/services/trip-service/internal/domain"
-	"ride-sharing/services/trip-service/internal/infrastructure/repository"
 	tripTypes "ride-sharing/services/trip-service/pkg/types"
 	"ride-sharing/shared/types"
 
@@ -18,11 +17,11 @@ import (
 )
 
 type tripService struct {
-	repo repository.TripRepository
+	repo domain.TripRepository
 }
 
 // NewTripServer wires a TripService with the given repository.
-func NewTripServer(r repository.TripRepository) domain.TripService {
+func NewTripServer(r domain.TripRepository) domain.TripService {
 	return &tripService{
 		repo: r,
 	}
@@ -54,6 +53,14 @@ func (s *tripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel
 		RideFare: fare,
 	}
 	return s.repo.CreateTrip(ctx, trip)
+}
+
+func (s *tripService) CancelTrip(ctx context.Context, tripID string) error {
+	return s.repo.CancelTrip(ctx, tripID)
+}
+
+func (s *tripService) CompleteTrip(ctx context.Context, tripID string) (*domain.TripModel, error) {
+	return s.repo.CompleteTrip(ctx, tripID)
 }
 
 func (s *tripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error) {

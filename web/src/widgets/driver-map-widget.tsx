@@ -80,10 +80,12 @@ export function DriverMapWidget({ carId, userID }: Props) {
         <div className="flex-1 overflow-y-auto">
           <DriverTripOverview
             trip={session.requestedTrip}
+            acceptedTrip={session.acceptedTrip}
             status={session.tripStatus}
             timeRemaining={session.timeRemaining}
             onAcceptTrip={() => session.requestedTrip && session.driver && session.acceptTrip(session.requestedTrip, session.driver)}
             onDeclineTrip={() => session.requestedTrip && session.driver && session.declineTrip(session.requestedTrip, session.driver)}
+            onCompleteTrip={session.completeTrip}
           />
         </div>
       </div>

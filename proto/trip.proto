@@ -7,6 +7,9 @@ option go_package = "shared/proto/trip;trip";
 service TripService {
   rpc PreviewTrip(PreviewTripRequest) returns (PreviewTripResponse);
   rpc CreateTrip(CreateTripRequest) returns (CreateTripResponse);
+  rpc CancelTrip(CancelTripRequest) returns (CancelTripResponse);
+  rpc CompleteTrip(CompleteTripRequest) returns (CompleteTripResponse);
+  rpc GetTripByID(GetTripByIDRequest) returns (GetTripByIDResponse);
 }
 
 message PreviewTripRequest {
@@ -49,6 +52,34 @@ message CreateTripRequest {
 }
 
 message CreateTripResponse {
+  string tripID = 1;
+  int64 amountInCents = 2;
+  string currency = 3;
+  string userID = 4;
+}
+
+message GetTripByIDRequest {
+  string tripID = 1;
+}
+
+message GetTripByIDResponse {
+  Trip trip = 1;
+}
+
+message CancelTripRequest {
+  string userID = 1;
+}
+
+message CancelTripResponse {
+  string userID = 1;
+}
+
+message CompleteTripRequest {
+  string tripID = 1;
+  string driverID = 2;
+}
+
+message CompleteTripResponse {
   string tripID = 1;
 }
 

@@ -49,5 +49,6 @@ export type RequestRideProps = {
 
 export type HTTPTripStartResponse = {
   tripID: string;
+  clientSecret: string;
 }
 

@@ -76,11 +76,49 @@ func (h *gRPCHandler) CreateTrip(ctx context.Context, req *pb.CreateTripRequest)
 		return nil, status.Errorf(codes.Internal, "failed to create the trip: %v", err)
 	}
 
-	if err := h.publisher.PublishTripCreated(ctx, trip); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to publish the trip created event: %v", err)
+	return &pb.CreateTripResponse{
+		TripID:       trip.ID,
+		AmountInCents: int64(rideFare.TotalPriceInCents),
+		Currency:     "usd",
+		UserID:       trip.UserID,
+	}, nil
+}
+
+func (h *gRPCHandler) GetTripByID(ctx context.Context, req *pb.GetTripByIDRequest) (*pb.GetTripByIDResponse, error) {
+	trip, err := h.service.GetTripByID(ctx, req.GetTripID())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get trip: %v", err)
+	}
+	if trip == nil {
+		return nil, status.Errorf(codes.NotFound, "trip not found: %s", req.GetTripID())
+	}
+	return &pb.GetTripByIDResponse{Trip: trip.ToProto()}, nil
+}
+
+func (h *gRPCHandler) CancelTrip(ctx context.Context, req *pb.CancelTripRequest) (*pb.CancelTripResponse, error) {
+	userID := req.GetUserID()
+
+	err := h.service.CancelTrip(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to cancel the trip: %v", err)
 	}
 
-	return &pb.CreateTripResponse{
-		TripID: trip.ID,
+	return &pb.CancelTripResponse{
+		UserID: userID,
 	}, nil
+}
+
+func (h *gRPCHandler) CompleteTrip(ctx context.Context, req *pb.CompleteTripRequest) (*pb.CompleteTripResponse, error) {
+	tripID := req.GetTripID()
+
+	trip, err := h.service.CompleteTrip(ctx, tripID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to complete the trip: %v", err)
+	}
+
+	if err := h.publisher.PublishTripCompleted(ctx, trip); err != nil {
+		log.Printf("failed to publish trip completed event: %v", err)
+	}
+
+	return &pb.CompleteTripResponse{TripID: tripID}, nil
 }

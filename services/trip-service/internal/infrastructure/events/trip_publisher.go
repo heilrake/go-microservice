@@ -33,5 +33,21 @@ func (p *TripEventPublisher) PublishTripCreated(ctx context.Context, trip *domai
 		OwnerID: trip.UserID,
 		Data:    tripEventJSON,
 	})
+}
 
+func (p *TripEventPublisher) PublishTripCompleted(ctx context.Context, trip *domain.TripModel) error {
+	payload := messaging.TripCompletedData{
+		TripID: trip.ID,
+		UserID: trip.UserID,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	return p.rabbitmq.PublishMessage(ctx, contracts.PaymentCmdCapturePayment, contracts.AmqpMessage{
+		OwnerID: trip.UserID,
+		Data:    data,
+	})
 }

@@ -86,6 +86,7 @@ func main() {
 	// HTTP routes
 	mux.Handle("POST /trip/preview", tracing.WrapHandlerFunc(handleTripPreview(app), "handleTripPreview"))
 	mux.Handle("POST /trip/start", tracing.WrapHandlerFunc(handleTripStart(app), "handleTripStart"))
+	mux.Handle("POST /trip/cancel", tracing.WrapHandlerFunc(handleTripCancel(app), "handleTripCancel"))
 	mux.Handle("POST /user/create", tracing.WrapHandlerFunc(handleUserCreation(app), "handleUserCreation"))
 	mux.Handle("POST /driver", tracing.WrapHandlerFunc(handleCreateDriver(app), "handleCreateDriver"))
 	mux.Handle("GET /driver", tracing.WrapHandlerFunc(handleGetDriver(app), "handleGetDriver"))
@@ -94,10 +95,10 @@ func main() {
 	mux.Handle("POST /auth/oauth", tracing.WrapHandlerFunc(proxyAuth("/auth/oauth"), "proxyAuthOAuth"))
 	mux.Handle("POST /dev/login", tracing.WrapHandlerFunc(proxyAuth("/dev/login"), "proxyDevLogin"))
 	mux.Handle("/ws/drivers", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleDriverWebSocket(w, r, rabbitmq)
+		handleDriverWebSocket(w, r, rabbitmq, app)
 	}, "/ws/drivers"))
 	mux.Handle("/ws/riders", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleRiderWebSocket(w, r)
+		handleRiderWebSocket(w, r, rabbitmq, app)
 	}, "/ws/riders"))
 	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleStripeWebhook(w, r, rabbitmq)

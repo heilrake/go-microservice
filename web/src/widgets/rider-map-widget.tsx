@@ -38,6 +38,12 @@ export function RiderMapWidget() {
     }
   }
 
+  const handlePaymentConfirmed = () => {
+    if (!booking.trip?.tripID) return
+    events.sendPaymentConfirmed(booking.trip.tripID)
+    booking.clearClientSecret()
+  }
+
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
       <div className={`${booking.destination ? 'flex-[0.7]' : 'flex-1'}`}>
@@ -94,9 +100,10 @@ export function RiderMapWidget() {
           trip={booking.trip}
           assignedDriver={events.assignedDriver}
           status={events.tripStatus}
-          paymentSession={events.paymentSession}
+          clientSecret={booking.clientSecret}
           selectedCarType={booking.selectedCarType}
           onPackageSelect={booking.startTrip}
+          onPaymentConfirmed={handlePaymentConfirmed}
           onCancel={handleCancel}
         />
       </div>

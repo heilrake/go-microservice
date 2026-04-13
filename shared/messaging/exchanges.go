@@ -134,5 +134,21 @@ func (r *RabbitMQ) DeclareExchanges() error {
 		return err
 	}
 
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   PaymentCaptureQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.PaymentCmdCapturePayment},
+	}); err != nil {
+		return err
+	}
+
+	if err := r.DeclareQueue(QueueConfig{
+		QueueName:   PaymentCancelQueue,
+		Exchanges:   []string{TripExchange},
+		RoutingKeys: []string{contracts.PaymentCmdCancelPayment},
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

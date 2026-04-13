@@ -18,7 +18,7 @@ type postgresRepository struct {
 }
 
 // NewPostgresRepository creates a new PostgreSQL repository instance.
-func NewPostgresRepository(gormDB *gorm.DB) TripRepository {
+func NewPostgresRepository(gormDB *gorm.DB) domain.TripRepository {
 	return &postgresRepository{
 		db: gormDB,
 	}
@@ -34,6 +34,30 @@ func (r *postgresRepository) CreateTrip(ctx context.Context, trip *domain.TripMo
 	result := dbTrip.ToDomain()
 	result.RideFare = trip.RideFare
 	return result, nil
+}
+
+func (r *postgresRepository) CancelTrip(ctx context.Context, userID string) error {
+	activeStatuses := []string{"pending", "awaiting_driver"}
+	result := r.db.WithContext(ctx).Model(&db.Trip{}).
+		Where("user_id = ? AND status IN ?", userID, activeStatuses).
+		Update("status", "cancelled")
+	if result.Error != nil {
+		return fmt.Errorf("failed to cancel trip: %w", result.Error)
+	}
+	return nil
+}
+
+func (r *postgresRepository) CompleteTrip(ctx context.Context, tripID string) (*domain.TripModel, error) {
+	result := r.db.WithContext(ctx).Model(&db.Trip{}).
+		Where("id = ? AND status IN ?", tripID, []string{"assigned", "in_progress"}).
+		Update("status", "completed")
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to complete trip: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return nil, fmt.Errorf("trip not found or not in progress: %s", tripID)
+	}
+	return r.GetTripByID(ctx, tripID)
 }
 
 func (r *postgresRepository) SaveRideFare(ctx context.Context, fare *domain.RideFareModel) error {

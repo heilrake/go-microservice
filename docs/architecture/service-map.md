@@ -38,7 +38,7 @@ flowchart TD
     %% gRPC from gateway
     REST -->|"gRPC: CreateUser"| UserSvc
     REST -->|"gRPC: CreateDriver\nGetDriver\nCreateCar\nListCars"| DriverSvc
-    REST -->|"gRPC: PreviewTrip\nCreateTrip"| TripSvc
+    REST -->|"gRPC: PreviewTrip\nCreateTrip\nCancelTrip"| TripSvc
 
     %% RabbitMQ publish
     REST -->|"publish: payment.success"| MQ

@@ -49,6 +49,9 @@ export function useRiderEvents(userID: string) {
       client.on(WsEventType.NoDriversFound, () => {
         setState(prev => ({ ...prev, tripStatus: WsEventType.NoDriversFound }))
       }),
+      client.on(WsEventType.TripCompleted, () => {
+        setState(prev => ({ ...prev, tripStatus: WsEventType.TripCompleted }))
+      }),
       client.on(WsEventType.PaymentSessionCreated, (session) => {
         setState(prev => ({
           ...prev,
@@ -69,7 +72,10 @@ export function useRiderEvents(userID: string) {
   const reset = () => {
     setState(prev => ({ ...prev, tripStatus: null, paymentSession: null }))
   }
-  console.log("state", state)
 
-  return { ...state, reset }
+  const sendPaymentConfirmed = (tripID: string) => {
+    clientRef.current?.sendRaw('rider.cmd.payment_confirmed', { tripID })
+  }
+
+  return { ...state, reset, sendPaymentConfirmed }
 }

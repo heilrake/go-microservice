@@ -321,6 +321,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/trip/cancel": {
+            "post": {
+                "description": "Cancel a trip",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trips"
+                ],
+                "summary": "Cancel trip",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.cancelTripRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancelled trip",
+                        "schema": {
+                            "$ref": "#/definitions/contracts.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid JSON",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/trip/preview": {
             "post": {
                 "description": "Calculate route geometry and available fare options before starting a trip",
@@ -478,6 +524,14 @@ const docTemplate = `{
                 "data": {},
                 "error": {
                     "$ref": "#/definitions/contracts.APIError"
+                }
+            }
+        },
+        "main.cancelTripRequest": {
+            "type": "object",
+            "properties": {
+                "userID": {
+                    "type": "string"
                 }
             }
         },

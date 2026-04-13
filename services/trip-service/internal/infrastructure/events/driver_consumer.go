@@ -114,6 +114,17 @@ func (c *DriverConsumer) ListenForNoDriversFound() error {
 			return err
 		}
 
+		cancelData, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+		if err := c.rabbitmq.PublishMessage(ctx, contracts.PaymentCmdCancelPayment, contracts.AmqpMessage{
+			OwnerID: payload.RiderID,
+			Data:    cancelData,
+		}); err != nil {
+			log.Printf("Failed to publish payment cancel for trip %s: %v", payload.TripID, err)
+		}
+
 		return nil
 	})
 }
@@ -155,26 +166,6 @@ func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 		OwnerID: trip.UserID,
 		Data:    marshalledTrip,
 	}); err != nil {
-		return err
-	}
-
-	marshalledPayload, err := json.Marshal(messaging.PaymentTripResponseData{
-		TripID:   tripID,
-		UserID:   trip.UserID,
-		DriverID: driver.Id,
-		Amount:   int64(trip.RideFare.TotalPriceInCents),
-		Currency: "USD",
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := c.rabbitmq.PublishMessage(ctx, contracts.PaymentCmdCreateSession,
-		contracts.AmqpMessage{
-			OwnerID: trip.UserID,
-			Data:    marshalledPayload,
-		},
-	); err != nil {
 		return err
 	}
 

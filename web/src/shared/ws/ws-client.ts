@@ -34,11 +34,13 @@ export class WsClient {
     if (!this.handlers[event]) {
       this.handlers[event] = []
     }
-    (this.handlers[event] as EventHandler<T>[]).push(handler)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.handlers[event] as any[]).push(handler)
 
     // Return unsubscribe function
     return () => {
-      this.handlers[event] = (this.handlers[event] as EventHandler<T>[]).filter(h => h !== handler)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.handlers[event] = (this.handlers[event] as any[]).filter((h) => h !== handler) as any
     }
   }
 

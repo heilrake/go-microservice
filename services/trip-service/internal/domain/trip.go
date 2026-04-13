@@ -40,13 +40,18 @@ func (t *TripModel) ToProto() *pb.Trip {
 
 type TripRepository interface {
 	CreateTrip(ctx context.Context, trip *TripModel) (*TripModel, error)
+	CancelTrip(ctx context.Context, userID string) error
+	CompleteTrip(ctx context.Context, tripID string) (*TripModel, error)
 	GetTripByID(ctx context.Context, id string) (*TripModel, error)
 	GetRideFareByID(ctx context.Context, id string) (*RideFareModel, error)
 	SaveRideFare(ctx context.Context, fare *RideFareModel) error
+	UpdateTrip(ctx context.Context, tripID string, status string, driver *pbd.Driver) error
 }
 
 type TripService interface {
 	CreateTrip(ctx context.Context, fare *RideFareModel) (*TripModel, error)
+	CancelTrip(ctx context.Context, userID string) error
+	CompleteTrip(ctx context.Context, tripID string) (*TripModel, error)
 	GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error)
 	EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*RideFareModel
 	GenerateTripFares(ctx context.Context, fares []*RideFareModel, userID string, route *tripTypes.OsrmApiResponse) ([]*RideFareModel, error)

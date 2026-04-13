@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.33.1
-// source: proto/driver.proto
+// source: driver.proto
 
 package driver
 
@@ -32,7 +32,7 @@ type CreateDriverRequest struct {
 
 func (x *CreateDriverRequest) Reset() {
 	*x = CreateDriverRequest{}
-	mi := &file_proto_driver_proto_msgTypes[0]
+	mi := &file_driver_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +44,7 @@ func (x *CreateDriverRequest) String() string {
 func (*CreateDriverRequest) ProtoMessage() {}
 
 func (x *CreateDriverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[0]
+	mi := &file_driver_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +57,7 @@ func (x *CreateDriverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDriverRequest.ProtoReflect.Descriptor instead.
 func (*CreateDriverRequest) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{0}
+	return file_driver_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CreateDriverRequest) GetUserId() string {
@@ -90,7 +90,7 @@ type CreateDriverResponse struct {
 
 func (x *CreateDriverResponse) Reset() {
 	*x = CreateDriverResponse{}
-	mi := &file_proto_driver_proto_msgTypes[1]
+	mi := &file_driver_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -102,7 +102,7 @@ func (x *CreateDriverResponse) String() string {
 func (*CreateDriverResponse) ProtoMessage() {}
 
 func (x *CreateDriverResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[1]
+	mi := &file_driver_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,7 +115,7 @@ func (x *CreateDriverResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDriverResponse.ProtoReflect.Descriptor instead.
 func (*CreateDriverResponse) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{1}
+	return file_driver_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CreateDriverResponse) GetDriver() *Driver {
@@ -134,7 +134,7 @@ type GetDriverRequest struct {
 
 func (x *GetDriverRequest) Reset() {
 	*x = GetDriverRequest{}
-	mi := &file_proto_driver_proto_msgTypes[2]
+	mi := &file_driver_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -146,7 +146,7 @@ func (x *GetDriverRequest) String() string {
 func (*GetDriverRequest) ProtoMessage() {}
 
 func (x *GetDriverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[2]
+	mi := &file_driver_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -159,7 +159,7 @@ func (x *GetDriverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDriverRequest.ProtoReflect.Descriptor instead.
 func (*GetDriverRequest) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{2}
+	return file_driver_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetDriverRequest) GetUserId() string {
@@ -178,7 +178,7 @@ type GetDriverResponse struct {
 
 func (x *GetDriverResponse) Reset() {
 	*x = GetDriverResponse{}
-	mi := &file_proto_driver_proto_msgTypes[3]
+	mi := &file_driver_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -190,7 +190,7 @@ func (x *GetDriverResponse) String() string {
 func (*GetDriverResponse) ProtoMessage() {}
 
 func (x *GetDriverResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[3]
+	mi := &file_driver_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -203,7 +203,7 @@ func (x *GetDriverResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDriverResponse.ProtoReflect.Descriptor instead.
 func (*GetDriverResponse) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{3}
+	return file_driver_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetDriverResponse) GetDriver() *Driver {
@@ -224,7 +224,7 @@ type CreateCarRequest struct {
 
 func (x *CreateCarRequest) Reset() {
 	*x = CreateCarRequest{}
-	mi := &file_proto_driver_proto_msgTypes[4]
+	mi := &file_driver_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -236,7 +236,7 @@ func (x *CreateCarRequest) String() string {
 func (*CreateCarRequest) ProtoMessage() {}
 
 func (x *CreateCarRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[4]
+	mi := &file_driver_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -249,7 +249,7 @@ func (x *CreateCarRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCarRequest.ProtoReflect.Descriptor instead.
 func (*CreateCarRequest) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{4}
+	return file_driver_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateCarRequest) GetUserId() string {
@@ -282,7 +282,7 @@ type CreateCarResponse struct {
 
 func (x *CreateCarResponse) Reset() {
 	*x = CreateCarResponse{}
-	mi := &file_proto_driver_proto_msgTypes[5]
+	mi := &file_driver_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -294,7 +294,7 @@ func (x *CreateCarResponse) String() string {
 func (*CreateCarResponse) ProtoMessage() {}
 
 func (x *CreateCarResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[5]
+	mi := &file_driver_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -307,7 +307,7 @@ func (x *CreateCarResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCarResponse.ProtoReflect.Descriptor instead.
 func (*CreateCarResponse) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{5}
+	return file_driver_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateCarResponse) GetCar() *Car {
@@ -326,7 +326,7 @@ type ListCarsRequest struct {
 
 func (x *ListCarsRequest) Reset() {
 	*x = ListCarsRequest{}
-	mi := &file_proto_driver_proto_msgTypes[6]
+	mi := &file_driver_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +338,7 @@ func (x *ListCarsRequest) String() string {
 func (*ListCarsRequest) ProtoMessage() {}
 
 func (x *ListCarsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[6]
+	mi := &file_driver_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +351,7 @@ func (x *ListCarsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCarsRequest.ProtoReflect.Descriptor instead.
 func (*ListCarsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{6}
+	return file_driver_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListCarsRequest) GetUserId() string {
@@ -370,7 +370,7 @@ type ListCarsResponse struct {
 
 func (x *ListCarsResponse) Reset() {
 	*x = ListCarsResponse{}
-	mi := &file_proto_driver_proto_msgTypes[7]
+	mi := &file_driver_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -382,7 +382,7 @@ func (x *ListCarsResponse) String() string {
 func (*ListCarsResponse) ProtoMessage() {}
 
 func (x *ListCarsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[7]
+	mi := &file_driver_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +395,7 @@ func (x *ListCarsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCarsResponse.ProtoReflect.Descriptor instead.
 func (*ListCarsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{7}
+	return file_driver_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListCarsResponse) GetCars() []*Car {
@@ -417,7 +417,7 @@ type Car struct {
 
 func (x *Car) Reset() {
 	*x = Car{}
-	mi := &file_proto_driver_proto_msgTypes[8]
+	mi := &file_driver_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -429,7 +429,7 @@ func (x *Car) String() string {
 func (*Car) ProtoMessage() {}
 
 func (x *Car) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[8]
+	mi := &file_driver_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -442,7 +442,7 @@ func (x *Car) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Car.ProtoReflect.Descriptor instead.
 func (*Car) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{8}
+	return file_driver_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Car) GetId() string {
@@ -485,7 +485,7 @@ type RegisterDriverRequest struct {
 
 func (x *RegisterDriverRequest) Reset() {
 	*x = RegisterDriverRequest{}
-	mi := &file_proto_driver_proto_msgTypes[9]
+	mi := &file_driver_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -497,7 +497,7 @@ func (x *RegisterDriverRequest) String() string {
 func (*RegisterDriverRequest) ProtoMessage() {}
 
 func (x *RegisterDriverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[9]
+	mi := &file_driver_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +510,7 @@ func (x *RegisterDriverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterDriverRequest.ProtoReflect.Descriptor instead.
 func (*RegisterDriverRequest) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{9}
+	return file_driver_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RegisterDriverRequest) GetDriverID() string {
@@ -550,7 +550,7 @@ type RegisterDriverResponse struct {
 
 func (x *RegisterDriverResponse) Reset() {
 	*x = RegisterDriverResponse{}
-	mi := &file_proto_driver_proto_msgTypes[10]
+	mi := &file_driver_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +562,7 @@ func (x *RegisterDriverResponse) String() string {
 func (*RegisterDriverResponse) ProtoMessage() {}
 
 func (x *RegisterDriverResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[10]
+	mi := &file_driver_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +575,7 @@ func (x *RegisterDriverResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterDriverResponse.ProtoReflect.Descriptor instead.
 func (*RegisterDriverResponse) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{10}
+	return file_driver_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *RegisterDriverResponse) GetDriver() *Driver {
@@ -601,7 +601,7 @@ type Driver struct {
 
 func (x *Driver) Reset() {
 	*x = Driver{}
-	mi := &file_proto_driver_proto_msgTypes[11]
+	mi := &file_driver_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -613,7 +613,7 @@ func (x *Driver) String() string {
 func (*Driver) ProtoMessage() {}
 
 func (x *Driver) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[11]
+	mi := &file_driver_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -626,7 +626,7 @@ func (x *Driver) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Driver.ProtoReflect.Descriptor instead.
 func (*Driver) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{11}
+	return file_driver_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Driver) GetId() string {
@@ -695,7 +695,7 @@ type Location struct {
 
 func (x *Location) Reset() {
 	*x = Location{}
-	mi := &file_proto_driver_proto_msgTypes[12]
+	mi := &file_driver_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -707,7 +707,7 @@ func (x *Location) String() string {
 func (*Location) ProtoMessage() {}
 
 func (x *Location) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_driver_proto_msgTypes[12]
+	mi := &file_driver_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +720,7 @@ func (x *Location) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Location.ProtoReflect.Descriptor instead.
 func (*Location) Descriptor() ([]byte, []int) {
-	return file_proto_driver_proto_rawDescGZIP(), []int{12}
+	return file_driver_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Location) GetLatitude() float64 {
@@ -737,11 +737,11 @@ func (x *Location) GetLongitude() float64 {
 	return 0
 }
 
-var File_proto_driver_proto protoreflect.FileDescriptor
+var File_driver_proto protoreflect.FileDescriptor
 
-const file_proto_driver_proto_rawDesc = "" +
+const file_driver_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/driver.proto\x12\x06driver\"k\n" +
+	"\fdriver.proto\x12\x06driver\"k\n" +
 	"\x13CreateDriverRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12'\n" +
@@ -795,19 +795,19 @@ const file_proto_driver_proto_rawDesc = "" +
 	"\x10UnRegisterDriver\x12\x1d.driver.RegisterDriverRequest\x1a\x1e.driver.RegisterDriverResponseB\x1cZ\x1ashared/proto/driver;driverb\x06proto3"
 
 var (
-	file_proto_driver_proto_rawDescOnce sync.Once
-	file_proto_driver_proto_rawDescData []byte
+	file_driver_proto_rawDescOnce sync.Once
+	file_driver_proto_rawDescData []byte
 )
 
-func file_proto_driver_proto_rawDescGZIP() []byte {
-	file_proto_driver_proto_rawDescOnce.Do(func() {
-		file_proto_driver_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_driver_proto_rawDesc), len(file_proto_driver_proto_rawDesc)))
+func file_driver_proto_rawDescGZIP() []byte {
+	file_driver_proto_rawDescOnce.Do(func() {
+		file_driver_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_driver_proto_rawDesc), len(file_driver_proto_rawDesc)))
 	})
-	return file_proto_driver_proto_rawDescData
+	return file_driver_proto_rawDescData
 }
 
-var file_proto_driver_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
-var file_proto_driver_proto_goTypes = []any{
+var file_driver_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_driver_proto_goTypes = []any{
 	(*CreateDriverRequest)(nil),    // 0: driver.CreateDriverRequest
 	(*CreateDriverResponse)(nil),   // 1: driver.CreateDriverResponse
 	(*GetDriverRequest)(nil),       // 2: driver.GetDriverRequest
@@ -822,7 +822,7 @@ var file_proto_driver_proto_goTypes = []any{
 	(*Driver)(nil),                 // 11: driver.Driver
 	(*Location)(nil),               // 12: driver.Location
 }
-var file_proto_driver_proto_depIdxs = []int32{
+var file_driver_proto_depIdxs = []int32{
 	11, // 0: driver.CreateDriverResponse.driver:type_name -> driver.Driver
 	11, // 1: driver.GetDriverResponse.driver:type_name -> driver.Driver
 	8,  // 2: driver.CreateCarResponse.car:type_name -> driver.Car
@@ -848,26 +848,26 @@ var file_proto_driver_proto_depIdxs = []int32{
 	0,  // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_proto_driver_proto_init() }
-func file_proto_driver_proto_init() {
-	if File_proto_driver_proto != nil {
+func init() { file_driver_proto_init() }
+func file_driver_proto_init() {
+	if File_driver_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_driver_proto_rawDesc), len(file_proto_driver_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_driver_proto_rawDesc), len(file_driver_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_driver_proto_goTypes,
-		DependencyIndexes: file_proto_driver_proto_depIdxs,
-		MessageInfos:      file_proto_driver_proto_msgTypes,
+		GoTypes:           file_driver_proto_goTypes,
+		DependencyIndexes: file_driver_proto_depIdxs,
+		MessageInfos:      file_driver_proto_msgTypes,
 	}.Build()
-	File_proto_driver_proto = out.File
-	file_proto_driver_proto_goTypes = nil
-	file_proto_driver_proto_depIdxs = nil
+	File_driver_proto = out.File
+	file_driver_proto_goTypes = nil
+	file_driver_proto_depIdxs = nil
 }

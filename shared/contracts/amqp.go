@@ -10,16 +10,22 @@ type AmqpMessage struct {
 const (
 	// Trip events (trip.event.*)
 	TripEventCreated             = "trip.event.created"
+	TripEventCancelled           = "trip.event.cancelled"
+	TripEventCompleted           = "trip.event.completed"
 	TripEventDriverAssigned      = "trip.event.driver_assigned"
 	TripEventNoDriversFound      = "trip.event.no_drivers_found"
 	TripEventDriverNotInterested = "trip.event.driver_not_interested"
 
+	// Rider commands (rider.cmd.*)
+	RiderCmdPaymentConfirmed = "rider.cmd.payment_confirmed"
+
 	// Driver commands (driver.cmd.*)
-	DriverCmdTripRequest = "driver.cmd.trip_request"
-	DriverCmdTripAccept  = "driver.cmd.trip_accept"
-	DriverCmdTripDecline = "driver.cmd.trip_decline"
-	DriverCmdLocation    = "driver.cmd.location"
-	DriverCmdRegister    = "driver.cmd.register"
+	DriverCmdTripComplete = "driver.cmd.trip_complete"
+	DriverCmdTripRequest  = "driver.cmd.trip_request"
+	DriverCmdTripAccept   = "driver.cmd.trip_accept"
+	DriverCmdTripDecline  = "driver.cmd.trip_decline"
+	DriverCmdLocation     = "driver.cmd.location"
+	DriverCmdRegister     = "driver.cmd.register"
 
 	// Driver events (driver.event.*)
 	DriverEventDriverNotified = "driver.event.driver_notified"
@@ -33,7 +39,9 @@ const (
 	PaymentEventCancelled      = "payment.event.cancelled"
 
 	// Payment commands (payment.cmd.*)
-	PaymentCmdCreateSession = "payment.cmd.create_session"
+	PaymentCmdCreateSession  = "payment.cmd.create_session"
+	PaymentCmdCapturePayment = "payment.cmd.capture_payment"
+	PaymentCmdCancelPayment  = "payment.cmd.cancel_payment"
 
 	// User events (user.event.*)
 	UserEventCreated = "user.event.created"

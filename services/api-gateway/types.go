@@ -30,6 +30,16 @@ type startTripRequest struct {
 	UserID     string `json:"userID"`
 }
 
+type cancelTripRequest struct {
+	UserID string `json:"userID"`
+}
+
+func (c *cancelTripRequest) toProto() *pb.CancelTripRequest {
+	return &pb.CancelTripRequest{
+		UserID: c.UserID,
+	}
+}
+
 func (c *startTripRequest) toProto() *pb.CreateTripRequest {
 	return &pb.CreateTripRequest{
 		RideFareID: c.RideFareID,
@@ -57,8 +67,8 @@ type createCarRequest struct {
 // oauthLoginRequest is the request body for POST /auth/oauth.
 type oauthLoginRequest struct {
 	Code        string `json:"code"`
-	Provider    string `json:"provider"`    // "google"
-	Role        string `json:"role"`        // "rider" | "driver"
+	Provider    string `json:"provider"` // "google"
+	Role        string `json:"role"`     // "rider" | "driver"
 	RedirectURI string `json:"redirect_uri"`
 }
 

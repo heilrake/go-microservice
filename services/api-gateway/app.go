@@ -5,12 +5,13 @@ import (
 )
 
 type Clients struct {
-	UserClient   *grpc_client.UserServiceClient
-	TripClient   *grpc_client.TripServiceClient
-	DriverClient *grpc_client.DriverServiceClient
+	UserClient    *grpc_client.UserServiceClient
+	TripClient    *grpc_client.TripServiceClient
+	DriverClient  *grpc_client.DriverServiceClient
+	PaymentClient *grpc_client.PaymentServiceClient
 }
 
-// NewApp initializes all gRPC clients once at startup
+// InitializeClients initializes all gRPC clients once at startup
 func InitializeClients() (*Clients, error) {
 	userClient, err := grpc_client.NewUserServiceClient()
 	if err != nil {
@@ -30,10 +31,19 @@ func InitializeClients() (*Clients, error) {
 		return nil, err
 	}
 
+	paymentClient, err := grpc_client.NewPaymentServiceClient()
+	if err != nil {
+		userClient.Close()
+		tripClient.Close()
+		driverClient.Close()
+		return nil, err
+	}
+
 	return &Clients{
-		UserClient:   userClient,
-		TripClient:   tripClient,
-		DriverClient: driverClient,
+		UserClient:    userClient,
+		TripClient:    tripClient,
+		DriverClient:  driverClient,
+		PaymentClient: paymentClient,
 	}, nil
 }
 
@@ -46,5 +56,8 @@ func (a *Clients) CloseAllClients() {
 	}
 	if a.DriverClient != nil {
 		a.DriverClient.Close()
+	}
+	if a.PaymentClient != nil {
+		a.PaymentClient.Close()
 	}
 }
