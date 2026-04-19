@@ -42,6 +42,4 @@ type PaymentConfig struct {
 	StripeSecretKey     string `json:"stripeSecretKey"`
 	StripeWebhookSecret string `json:"stripeWebhookSecret"`
 	Currency            string `json:"currency"`
-	SuccessURL          string `json:"successURL"`
-	CancelURL           string `json:"cancelURL"`
 }
