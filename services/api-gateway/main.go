@@ -100,9 +100,6 @@ func main() {
 	mux.Handle("/ws/riders", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleRiderWebSocket(w, r, rabbitmq, app)
 	}, "/ws/riders"))
-	mux.Handle("/webhook/stripe", tracing.WrapHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleStripeWebhook(w, r, rabbitmq)
-	}, "/webhook/stripe"))
 
 	server := &http.Server{
 		Addr:    httpAddr,

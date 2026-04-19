@@ -34,7 +34,6 @@ const (
 
 	// Payment events (payment.event.*)
 	PaymentEventSessionCreated = "payment.event.session_created"
-	PaymentEventSuccess        = "payment.event.success"
 	PaymentEventFailed         = "payment.event.failed"
 	PaymentEventCancelled      = "payment.event.cancelled"
 
