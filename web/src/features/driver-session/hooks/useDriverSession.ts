@@ -11,7 +11,6 @@ type Location = { latitude: number; longitude: number }
 
 export function useDriverSession(userID: string, carId: string, location: Location) {
   const [sessionLocation, setSessionLocation] = useState<Location>(location)
-  const [acceptedTrip, setAcceptedTrip] = useState<Trip | null>(null)
 
   const geohash = useMemo(
     () => Geohash.encode(sessionLocation.latitude, sessionLocation.longitude, 7),
@@ -31,7 +30,6 @@ export function useDriverSession(userID: string, carId: string, location: Locati
       riderID: trip.userID,
       driver,
     })
-    setAcceptedTrip(trip)
     events.reset()
   }
 
@@ -45,12 +43,12 @@ export function useDriverSession(userID: string, carId: string, location: Locati
   }
 
   const completeTrip = () => {
-    if (!acceptedTrip) return
+    if (!events.assignedTrip) return
     events.sendRaw('driver.cmd.trip_complete', {
-      tripID: acceptedTrip.id,
-      riderID: acceptedTrip.userID,
+      tripID: events.assignedTrip.id,
+      riderID: events.assignedTrip.userID,
     })
-    setAcceptedTrip(null)
+    events.reset()
   }
 
   const moveLocation = (lat: number, lng: number) => {
@@ -60,7 +58,7 @@ export function useDriverSession(userID: string, carId: string, location: Locati
   return {
     driver: events.driver,
     requestedTrip: events.requestedTrip,
-    acceptedTrip,
+    acceptedTrip: events.assignedTrip,
     tripStatus: events.tripStatus,
     timeRemaining: events.timeRemaining,
     error: events.error,

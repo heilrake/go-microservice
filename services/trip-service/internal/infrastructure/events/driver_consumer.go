@@ -169,6 +169,14 @@ func (c *DriverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 		return err
 	}
 
+	// Notify the driver that the trip was confirmed
+	if err := c.rabbitmq.PublishMessage(ctx, contracts.TripEventDriverAssigned, contracts.AmqpMessage{
+		OwnerID: driver.UserId,
+		Data:    marshalledTrip,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
 

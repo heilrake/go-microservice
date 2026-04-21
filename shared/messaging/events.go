@@ -18,9 +18,9 @@ const (
 	NotifyDriverAssignmentQueue      = "notify_driver_assignment"
 	PaymentTripResponseQueue         = "payment_trip_response"
 	PaymentCaptureQueue              = "payment_capture"
+	PaymentCaptureDLQQueue           = "payment_capture_dlq"
 	PaymentCancelQueue               = "payment_cancel"
 	NotifyPaymentSessionCreatedQueue = "notify_payment_session_created"
-	NotifyPaymentSuccessQueue        = "notify_payment_success"
 )
 
 type TripEventData struct {

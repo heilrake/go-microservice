@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { useRef } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
-import L from 'leaflet'
+import { useRef } from 'react';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import L from 'leaflet';
 
-import { DriverCard } from '@/features/driver/ui/driver-card'
-import { DriverTripOverview } from '@/features/driver/ui/driver-trip-overview'
-import { useDriverSession } from '@/features/driver-session'
-import { getMapIcon, MapClickHandler, RoutingControl } from '@/features/map'
-import type { CarPackageSlugType } from '@/features/packages'
+import { DriverCard } from '@/features/driver/ui/driver-card';
+import { DriverTripOverview } from '@/features/driver/ui/driver-trip-overview';
+import { useDriverSession } from '@/features/driver-session';
+import { getMapIcon, MapClickHandler, RoutingControl } from '@/features/map';
+import type { CarPackageSlugType } from '@/features/packages';
 
-const driverMarker = getMapIcon('car')
-const startLocationMarker = getMapIcon('user')
-const destinationMarker = getMapIcon('pin')
+const driverMarker = getMapIcon('car');
+const startLocationMarker = getMapIcon('user');
+const destinationMarker = getMapIcon('pin');
 
-const START_LOCATION = { latitude: 49.43828, longitude: 32.060711 }
+const START_LOCATION = { latitude: 49.43828, longitude: 32.060711 };
 
-type Props = { carId: string; userID: string }
+type Props = { carId: string; userID: string };
 
 export function DriverMapWidget({ carId, userID }: Props) {
-  const mapRef = useRef<L.Map>(null)
+  const mapRef = useRef<L.Map>(null);
 
-  const session = useDriverSession(userID, carId, START_LOCATION)
+  const session = useDriverSession(userID, carId, START_LOCATION);
 
   const parsedRoute = session.requestedTrip?.route?.geometry[0]?.coordinates.map(
     (coord) => [coord.longitude, coord.latitude] as [number, number],
-  )
+  );
 
-  const routeCoords = session.requestedTrip?.route?.geometry[0]?.coordinates ?? []
-  const destination = routeCoords[routeCoords.length - 1]
-  const startLocation = routeCoords[0]
+  const routeCoords = session.requestedTrip?.route?.geometry[0]?.coordinates ?? [];
+  const destination = routeCoords[routeCoords.length - 1];
+  const startLocation = routeCoords[0];
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
@@ -38,8 +38,7 @@ export function DriverMapWidget({ carId, userID }: Props) {
           center={[session.sessionLocation.latitude, session.sessionLocation.longitude]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
-          ref={mapRef}
-        >
+          ref={mapRef}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution="&copy; OpenStreetMap contributors &copy; CARTO"
@@ -47,19 +46,22 @@ export function DriverMapWidget({ carId, userID }: Props) {
 
           <Marker
             position={[session.sessionLocation.latitude, session.sessionLocation.longitude]}
-            icon={driverMarker}
-          >
+            icon={driverMarker}>
             <Popup>Geohash: {session.geohash}</Popup>
           </Marker>
 
           {startLocation && (
-            <Marker position={[startLocation.longitude, startLocation.latitude]} icon={startLocationMarker}>
+            <Marker
+              position={[startLocation.longitude, startLocation.latitude]}
+              icon={startLocationMarker}>
               <Popup>Start</Popup>
             </Marker>
           )}
 
           {destination && (
-            <Marker position={[destination.longitude, destination.latitude]} icon={destinationMarker}>
+            <Marker
+              position={[destination.longitude, destination.latitude]}
+              icon={destinationMarker}>
               <Popup>Destination</Popup>
             </Marker>
           )}
@@ -83,12 +85,20 @@ export function DriverMapWidget({ carId, userID }: Props) {
             acceptedTrip={session.acceptedTrip}
             status={session.tripStatus}
             timeRemaining={session.timeRemaining}
-            onAcceptTrip={() => session.requestedTrip && session.driver && session.acceptTrip(session.requestedTrip, session.driver)}
-            onDeclineTrip={() => session.requestedTrip && session.driver && session.declineTrip(session.requestedTrip, session.driver)}
+            onAcceptTrip={() =>
+              session.requestedTrip &&
+              session.driver &&
+              session.acceptTrip(session.requestedTrip, session.driver)
+            }
+            onDeclineTrip={() =>
+              session.requestedTrip &&
+              session.driver &&
+              session.declineTrip(session.requestedTrip, session.driver)
+            }
             onCompleteTrip={session.completeTrip}
           />
         </div>
       </div>
     </div>
-  )
+  );
 }

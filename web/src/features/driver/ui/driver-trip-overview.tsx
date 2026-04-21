@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/button"
 
 type DriverTripOverviewProps = {
   trip?: Trip | null,
-  acceptedTrip?: Trip | null,
+  acceptedTrip?: { retryCount: number } & Trip | null,
   status?: TripEventType | null,
   timeRemaining?: number | null,
   onAcceptTrip?: () => void,
@@ -15,6 +15,7 @@ type DriverTripOverviewProps = {
 }
 
 export const DriverTripOverview = ({ trip, acceptedTrip, status, timeRemaining, onAcceptTrip, onDeclineTrip, onCompleteTrip }: DriverTripOverviewProps) => {
+  console.log("acceptedTrip",acceptedTrip)
   if (acceptedTrip) {
     return (
       <TripOverviewCard
@@ -24,9 +25,9 @@ export const DriverTripOverview = ({ trip, acceptedTrip, status, timeRemaining, 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <p className="text-sm text-gray-500">
-              Trip ID: {acceptedTrip.id}
+              Trip ID: {acceptedTrip.trip.id}
               <br />
-              Rider ID: {acceptedTrip.userID}
+              Rider ID: {acceptedTrip.trip.userID}
             </p>
           </div>
           <Button onClick={onCompleteTrip}>Complete trip</Button>

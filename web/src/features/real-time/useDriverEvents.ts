@@ -12,6 +12,7 @@ import { WsClient, WsEventType } from '@/shared/ws'
 type DriverEventsState = {
   driver: Driver | null
   requestedTrip: Trip | null
+  assignedTrip: Trip | null
   tripStatus: WsEventType | null
   timeRemaining: number | null
   error: string | null
@@ -30,6 +31,7 @@ export function useDriverEvents({ userID, carId, latitude, longitude }: ConnectP
   const [state, setState] = useState<DriverEventsState>({
     driver: null,
     requestedTrip: null,
+    assignedTrip: null,
     tripStatus: null,
     timeRemaining: null,
     error: null,
@@ -78,6 +80,9 @@ export function useDriverEvents({ userID, carId, latitude, longitude }: ConnectP
         stopCountdown()
         setState(prev => ({ ...prev, tripStatus: null, requestedTrip: null }))
       }),
+      client.on(WsEventType.DriverAssigned, (trip) => {
+        setState(prev => ({ ...prev, assignedTrip: trip }))
+      }),
     ]
 
     client.connect(url)
@@ -96,7 +101,7 @@ export function useDriverEvents({ userID, carId, latitude, longitude }: ConnectP
 
   const reset = () => {
     stopCountdown()
-    setState(prev => ({ ...prev, tripStatus: null, requestedTrip: null }))
+    setState(prev => ({ ...prev, tripStatus: null, requestedTrip: null, assignedTrip: null }))
   }
 
   return { ...state, sendRaw, reset }
