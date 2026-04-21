@@ -5,9 +5,9 @@ import { StripePaymentForm } from "@/features/payment";
 import type { RouteFare, TripPreview } from "@/features/trip";
 import { TripOverviewCard } from "@/features/trip";
 
-import { WsEventType } from "@/shared/ws"
 import { Button } from "@/shared/ui/button"
 import { Skeleton } from "@/shared/ui/skeleton"
+import { WsEventType } from "@/shared/ws"
 
 import { convertMetersToKilometers, convertSecondsToMinutes } from "../lib/math"
 import { DriverList } from "./drivers-list"

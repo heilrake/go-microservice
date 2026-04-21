@@ -18,6 +18,7 @@ type QueueConfig struct {
 func (r *RabbitMQ) DeclareQueue(config QueueConfig) error {
 	args := amqp091.Table{}
 	if config.DeadLetterQueue != "" {
+		args["x-queue-type"] = "quorum"
 		args["x-dead-letter-exchange"] = ""
 		args["x-dead-letter-routing-key"] = config.DeadLetterQueue
 		if config.MaxRetries > 0 {

@@ -111,14 +111,6 @@ func (r *RabbitMQ) DeclareExchanges() error {
 	}
 
 	if err := r.DeclareQueue(QueueConfig{
-		QueueName:   NotifyPaymentSessionCreatedQueue,
-		Exchanges:   []string{TripExchange},
-		RoutingKeys: []string{contracts.PaymentEventSessionCreated},
-	}); err != nil {
-		return err
-	}
-
-	if err := r.DeclareQueue(QueueConfig{
 		QueueName:   PaymentTripResponseQueue,
 		Exchanges:   []string{TripExchange},
 		RoutingKeys: []string{contracts.PaymentCmdCreateSession},

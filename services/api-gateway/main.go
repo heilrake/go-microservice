@@ -71,7 +71,6 @@ func main() {
 		messaging.DriverTripRequestExpiredQueue,
 		messaging.NotifyDriverNoDriversFoundQueue,
 		messaging.NotifyDriverAssignmentQueue,
-		messaging.NotifyPaymentSessionCreatedQueue,
 	} {
 		consumer := messaging.NewQueueConsumer(rabbitmq, connManager, q)
 		if err := consumer.Start(); err != nil {

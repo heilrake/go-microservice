@@ -7,20 +7,19 @@ import (
 )
 
 const (
-	FindAvailableDriversQueue        = "find_available_drivers"
-	DriverCmdTripRequestQueue        = "driver_cmd_trip_request"
-	DriverTripResponseQueue          = "driver_trip_response"
-	DriverTripAckQueue               = "driver_trip_ack"
-	DriverNotifiedQueue              = "driver_notified"
-	DriverTripRequestExpiredQueue    = "driver_trip_request_expired"
-	NotifyDriverNoDriversFoundQueue  = "notify_driver_no_drivers_found"
-	TripSearchFailedQueue            = "trip_search_failed"
-	NotifyDriverAssignmentQueue      = "notify_driver_assignment"
-	PaymentTripResponseQueue         = "payment_trip_response"
-	PaymentCaptureQueue              = "payment_capture"
-	PaymentCaptureDLQQueue           = "payment_capture_dlq"
-	PaymentCancelQueue               = "payment_cancel"
-	NotifyPaymentSessionCreatedQueue = "notify_payment_session_created"
+	FindAvailableDriversQueue       = "find_available_drivers"
+	DriverCmdTripRequestQueue       = "driver_cmd_trip_request"
+	DriverTripResponseQueue         = "driver_trip_response"
+	DriverTripAckQueue              = "driver_trip_ack"
+	DriverNotifiedQueue             = "driver_notified"
+	DriverTripRequestExpiredQueue   = "driver_trip_request_expired"
+	NotifyDriverNoDriversFoundQueue = "notify_driver_no_drivers_found"
+	TripSearchFailedQueue           = "trip_search_failed"
+	NotifyDriverAssignmentQueue     = "notify_driver_assignment"
+	PaymentTripResponseQueue        = "payment_trip_response"
+	PaymentCaptureQueue             = "payment_capture"
+	PaymentCaptureDLQQueue          = "payment_capture_dlq"
+	PaymentCancelQueue              = "payment_cancel"
 )
 
 type TripEventData struct {
@@ -41,13 +40,6 @@ type PaymentTripResponseData struct {
 	Amount    int64  `json:"amount"`
 	Currency  string `json:"currency"`
 	SessionID string `json:"sessionID"`
-}
-
-type PaymentEventSessionCreatedData struct {
-	TripID    string  `json:"tripID"`
-	SessionID string  `json:"sessionID"`
-	Amount    float64 `json:"amount"`
-	Currency  string  `json:"currency"`
 }
 
 type PaymentStatusUpdateData struct {

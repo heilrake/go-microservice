@@ -1,5 +1,4 @@
 import type { Driver } from '@/features/driver/models/types'
-import type { PaymentEventSessionCreatedData } from '@/features/payment'
 import type { Trip } from '@/features/trip'
 
 // All WebSocket event types from the server
@@ -15,8 +14,7 @@ export const WsEventType = {
   DriverTripRequest: 'driver.cmd.trip_request',
   DriverTripRequestExpired: 'driver.cmd.trip_request_expired',
   DriverRegister: 'driver.cmd.register',
-  // Payment
-  PaymentSessionCreated: 'payment.event.session_created',
+
 } as const
 
 export type WsEventType = typeof WsEventType[keyof typeof WsEventType]
@@ -31,7 +29,6 @@ export type WsEventPayloadMap = {
   [WsEventType.DriverTripRequest]: Trip
   [WsEventType.DriverTripRequestExpired]: undefined
   [WsEventType.DriverRegister]: Driver
-  [WsEventType.PaymentSessionCreated]: PaymentEventSessionCreatedData
 }
 
 export type WsMessage<T extends WsEventType = WsEventType> = {
