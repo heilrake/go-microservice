@@ -3,6 +3,7 @@
 # trip-postgres    → localhost:5433
 # driver-postgres  → localhost:5434
 # user-postgres    → localhost:5435
+# payment-postgres → localhost:5436
 
 forward() {
   local svc=$1
@@ -18,6 +19,7 @@ forward() {
 forward trip-postgres 5433 &
 forward driver-postgres 5434 &
 forward user-postgres 5435 &
+forward payment-postgres 5436 &
 
 echo "Port-forwards running. Press Ctrl+C to stop all."
 wait

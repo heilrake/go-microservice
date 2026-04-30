@@ -40,7 +40,7 @@ func (s *paymentService) CreatePaymentIntent(ctx context.Context, tripID, userID
 		ClientSecret:          clientSecret,
 		Amount:                amount,
 		Currency:              currency,
-		Status:                "authorized",
+		Status:                domain.StatusAuthorized,
 	}
 
 	if err := s.repo.Save(ctx, intent); err != nil {
@@ -60,7 +60,7 @@ func (s *paymentService) CapturePayment(ctx context.Context, tripID string) erro
 		return fmt.Errorf("failed to capture payment: %w", err)
 	}
 
-	return s.repo.UpdateStatus(ctx, tripID, "captured")
+	return s.repo.UpdateStatus(ctx, tripID, domain.StatusCaptured)
 }
 
 func (s *paymentService) CancelPayment(ctx context.Context, tripID string) error {
@@ -73,5 +73,5 @@ func (s *paymentService) CancelPayment(ctx context.Context, tripID string) error
 		return fmt.Errorf("failed to cancel payment: %w", err)
 	}
 
-	return s.repo.UpdateStatus(ctx, tripID, "cancelled")
+	return s.repo.UpdateStatus(ctx, tripID, domain.StatusCancelled)
 }

@@ -1,53 +1,68 @@
-# payment service
+# payment-service
 
-This service handles all payment-related operations in the system.
+Event-driven сервіс для обробки платежів через Stripe. Слухає події з RabbitMQ та керує lifecycle payment intent'ів.
 
-## Architecture
-
-The service follows Clean Architecture principles with the following structure:
+## Структура
 
 ```
 services/payment-service/
-├── cmd/                    # Application entry points
-│   └── main.go            # Main application setup
-├── internal/              # Private application code
-│   ├── domain/           # Business domain models and interfaces
-│   ├── service/          # Business logic implementation
-│   │   └── service.go    # Service implementations
-│   └── infrastructure/   # External dependencies implementations (abstractions)
-│       ├── events/       # Event handling (RabbitMQ)
-│       ├── grpc/         # gRPC server handlers
-│       └── repository/   # Data persistence
-├── pkg/                  # Public packages
-│   └── types/           # Shared types and models
-└── README.md            # This file
+├── cmd/main.go
+├── internal/
+│   ├── domain/           # інтерфейси Service, Repository, PaymentProcessor + моделі
+│   ├── service/          # бізнес-логіка + integration tests
+│   ├── migrations/       # SQL міграції (embed у бінарник)
+│   └── infrastructure/
+│       ├── repository/   # PostgreSQL через GORM
+│       ├── stripe/       # Stripe SDK клієнт
+│       ├── events/       # RabbitMQ consumer (trip events)
+│       └── grpc/         # gRPC handler
+└── pkg/types/            # публічні типи для інших сервісів
 ```
 
-### Layer Responsibilities
+`service` залежить виключно від `domain` інтерфейсів — жодних прямих залежностей від Stripe чи БД.
 
-1. **Domain Layer** (`internal/domain/`)
-   - Contains business domain interfaces
-   - Defines contracts for repositories and services
-   - Pure business logic, no implementation details
+## Payment Intent Lifecycle
 
-2. **Service Layer** (`internal/service/`)
-   - Implements business logic
-   - Uses repository interfaces
-   - Coordinates between different parts of the system
+```
+trip.event.created    → CreatePaymentIntent → status: authorized
+trip.event.completed  → CapturePayment      → status: captured
+trip.event.cancelled  → CancelPayment       → status: cancelled
+```
 
-3. **Infrastructure Layer** (`internal/infrastructure/`)
-   - `repository/`: Implements data persistence
-   - `events/`: Handles event publishing and consuming
-   - `grpc/`: Handles gRPC communication
+Статуси зберігаються в таблиці `payment_intents` (PostgreSQL).
 
-4. **Public Types** (`pkg/types/`)
-   - Contains shared types and models
-   - Can be imported by other services
+## Integration Tests
 
-## Key Benefits
+Файл: `internal/service/service_integration_test.go`
 
-1. **Dependency Inversion**: Services depend on interfaces, not implementations
-2. **Separation of Concerns**: Each layer has a specific responsibility
-3. **Testability**: Easy to mock dependencies for testing
-4. **Maintainability**: Clear boundaries between components
-5. **Flexibility**: Easy to swap implementations without affecting business logic
+Тести запускаються проти реального PostgreSQL у Docker через [testcontainers-go](https://golang.testcontainers.org/). Stripe замінений `mockStripe` — без реального API.
+
+### Як це працює
+
+1. `TestMain` піднімає PostgreSQL контейнер (`postgres:16`)
+2. Застосовує міграції через `sharedBootstrap.RunMigrator`
+3. Підключається через GORM і передає `*gorm.DB` у тести
+4. Кожен тест викликає `cleanDB(t)` для ізоляції між собою
+
+### Що покрито
+
+| Тест | Сценарій |
+|------|----------|
+| `TestCreatePaymentIntent` | Створення intent, статус `authorized`, збереження в БД |
+| `TestCapturePayment` | Захоплення платежу → статус `captured` |
+| `TestCancelPayment` | Скасування → статус `cancelled` |
+| `TestCapturePayment_TripNotFound` | Помилка якщо trip не існує |
+| `TestCancelPayment_TripNotFound` | Помилка якщо trip не існує |
+| `TestCreatePaymentIntent_DuplicateTripID` | UNIQUE constraint: другий create → помилка |
+| `TestCapturePayment_StripeError_StatusUnchanged` | Stripe впав → статус лишається `authorized` |
+| `TestCapturePayment_ConcurrentCalls` | 5 горутин одночасно → фінальний статус `captured` |
+| `TestCreatePaymentIntent_ConcurrentDuplicates` | 5 горутин одночасно → рівно 1 успіх |
+
+### Запуск
+
+```bash
+# з кореня репозиторію
+go test ./services/payment-service/internal/service/... -v -timeout 120s
+```
+
+> Потрібен запущений Docker.

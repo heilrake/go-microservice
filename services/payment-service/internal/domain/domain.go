@@ -2,6 +2,12 @@ package domain
 
 import "context"
 
+const (
+	StatusAuthorized = "authorized"
+	StatusCaptured   = "captured"
+	StatusCancelled  = "cancelled"
+)
+
 type Service interface {
 	CreatePaymentIntent(ctx context.Context, tripID, userID string, amount int64, currency string) (*PaymentIntentModel, error)
 	CapturePayment(ctx context.Context, tripID string) error
