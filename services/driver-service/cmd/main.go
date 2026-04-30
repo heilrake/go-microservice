@@ -99,7 +99,8 @@ func main() {
 		log.Fatalf("Failed to declare exchanges: %v", err)
 	}
 
-	consumer := events.NewTripConsumer(rabbitmq, svc)
+	maxDriverSearchAttempts := env.GetInt("MAX_DRIVER_SEARCH_ATTEMPTS", 3)
+	consumer := events.NewTripConsumer(rabbitmq, svc, maxDriverSearchAttempts)
 	go func() {
 		if err := consumer.Listen(); err != nil {
 			log.Fatalf("Failed to listen to the message: %v", err)

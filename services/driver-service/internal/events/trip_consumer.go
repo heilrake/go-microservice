@@ -26,12 +26,14 @@ type tripConsumer struct {
 	rabbitmq        *messaging.RabbitMQ
 	service         domain.DriverService
 	pendingRequests sync.Map // tripID → context.CancelFunc
+	maxAttempts     int
 }
 
-func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service domain.DriverService) *tripConsumer {
+func NewTripConsumer(rabbitmq *messaging.RabbitMQ, service domain.DriverService, maxAttempts int) *tripConsumer {
 	return &tripConsumer{
-		rabbitmq: rabbitmq,
-		service:  service,
+		rabbitmq:    rabbitmq,
+		service:     service,
+		maxAttempts: maxAttempts,
 	}
 }
 
@@ -86,8 +88,6 @@ func (c *tripConsumer) ListenForAck() error {
 	})
 }
 
-const maxSearchAttempts = 1
-
 func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload messaging.TripEventData) error {
 	tracer := otel.GetTracerProvider().Tracer("driver-service")
 	ctx, span := tracer.Start(ctx, "driver.find_and_notify",
@@ -100,8 +100,8 @@ func (c *tripConsumer) handleFindAndNotifyDrivers(ctx context.Context, payload m
 	)
 	defer span.End()
 
-	if payload.RetryCount >= maxSearchAttempts {
-		log.Printf("Trip %s exceeded max search attempts (%d) — giving up", payload.Trip.GetId(), maxSearchAttempts)
+	if payload.RetryCount >= c.maxAttempts {
+		log.Printf("Trip %s exceeded max search attempts (%d) — giving up", payload.Trip.GetId(), c.maxAttempts)
 		span.AddEvent("max_attempts_exceeded")
 		noDriversData, err := json.Marshal(messaging.NoDriversFoundData{
 			TripID:  payload.Trip.GetId(),
