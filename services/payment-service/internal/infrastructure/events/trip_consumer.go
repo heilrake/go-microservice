@@ -58,6 +58,11 @@ func (c *TripConsumer) ListenCapture() error {
 			return err
 		}
 
+		if msg.RoutingKey != contracts.PaymentCmdCapturePayment {
+			log.Printf("Unexpected routing key in capture queue: %s", msg.RoutingKey)
+			return nil
+		}
+
 		var payload messaging.TripCompletedData
 		if err := json.Unmarshal(message.Data, &payload); err != nil {
 			log.Printf("Failed to unmarshal capture payload: %v", err)
@@ -81,6 +86,11 @@ func (c *TripConsumer) ListenCancel() error {
 		if err := json.Unmarshal(msg.Body, &message); err != nil {
 			log.Printf("Failed to unmarshal cancel message: %v", err)
 			return err
+		}
+
+		if msg.RoutingKey != contracts.PaymentCmdCancelPayment {
+			log.Printf("Unexpected routing key in cancel queue: %s", msg.RoutingKey)
+			return nil
 		}
 
 		var payload messaging.NoDriversFoundData

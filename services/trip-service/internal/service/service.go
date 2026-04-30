@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"ride-sharing/services/trip-service/internal/domain"
 	tripTypes "ride-sharing/services/trip-service/pkg/types"
@@ -55,13 +56,15 @@ func (s *tripService) CreateTrip(ctx context.Context, fare *domain.RideFareModel
 	return s.repo.CreateTrip(ctx, trip)
 }
 
-func (s *tripService) CancelTrip(ctx context.Context, tripID string) error {
-	return s.repo.CancelTrip(ctx, tripID)
+func (s *tripService) CancelTrip(ctx context.Context, userID string) error {
+	return s.repo.CancelTrip(ctx, userID)
 }
 
 func (s *tripService) CompleteTrip(ctx context.Context, tripID string) (*domain.TripModel, error) {
 	return s.repo.CompleteTrip(ctx, tripID)
 }
+
+var osrmClient = &http.Client{Timeout: 5 * time.Second}
 
 func (s *tripService) GetRoute(ctx context.Context, pickup, destination *types.Coordinate) (*tripTypes.OsrmApiResponse, error) {
 	url := fmt.Sprintf(
@@ -70,7 +73,12 @@ func (s *tripService) GetRoute(ctx context.Context, pickup, destination *types.C
 		destination.Longitude, destination.Latitude,
 	)
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build OSRM request: %w", err)
+	}
+
+	resp, err := osrmClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch route from OSRM API: %v", err)
 	}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"ride-sharing/services/trip-service/internal/domain"
@@ -74,7 +75,7 @@ func (r *postgresRepository) GetRideFareByID(ctx context.Context, id string) (*d
 	var dbFare db.RideFare
 
 	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&dbFare).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get ride fare: %w", err)
@@ -87,7 +88,7 @@ func (r *postgresRepository) GetTripByID(ctx context.Context, id string) (*domai
 	var dbTrip db.Trip
 
 	if err := r.db.WithContext(ctx).Preload("RideFare").Where("id = ?", id).First(&dbTrip).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get trip: %w", err)

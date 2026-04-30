@@ -12,6 +12,33 @@ import (
 	"gorm.io/gorm"
 )
 
+func toDomainDriver(m *db.DriverModel) *domain.Driver {
+	d := &domain.Driver{
+		ID:             m.ID,
+		UserID:         m.UserID,
+		Name:           m.Name,
+		ProfilePicture: m.ProfilePicture,
+		Geohash:        m.Geohash,
+		Latitude:       m.Latitude,
+		Longitude:      m.Longitude,
+		CurrentCarID:   m.CurrentCarID,
+		IsAvailable:    m.IsAvailable,
+	}
+	if m.CurrentCar != nil {
+		d.CurrentCar = toDomainCar(m.CurrentCar)
+	}
+	return d
+}
+
+func toDomainCar(m *db.CarModel) *domain.Car {
+	return &domain.Car{
+		ID:          m.ID,
+		DriverID:    m.DriverID,
+		CarPlate:    m.CarPlate,
+		PackageSlug: m.PackageSlug,
+	}
+}
+
 type postgresRepository struct {
 	db *gorm.DB
 }
@@ -22,7 +49,7 @@ func NewPostgresRepository(gormDB *gorm.DB) domain.DriverRepository {
 	}
 }
 
-func (r *postgresRepository) CreateDriver(ctx context.Context, userID, name, profilePicture string) (*db.DriverModel, error) {
+func (r *postgresRepository) CreateDriver(ctx context.Context, userID, name, profilePicture string) (*domain.Driver, error) {
 	driver := &db.DriverModel{
 		ID:             uuid.New().String(),
 		UserID:         userID,
@@ -33,18 +60,18 @@ func (r *postgresRepository) CreateDriver(ctx context.Context, userID, name, pro
 	if err := r.db.WithContext(ctx).Create(driver).Error; err != nil {
 		return nil, fmt.Errorf("failed to create driver: %w", err)
 	}
-	return driver, nil
+	return toDomainDriver(driver), nil
 }
 
-func (r *postgresRepository) GetByUserID(ctx context.Context, userID string) (*db.DriverModel, error) {
+func (r *postgresRepository) GetByUserID(ctx context.Context, userID string) (*domain.Driver, error) {
 	var d db.DriverModel
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&d).Error; err != nil {
 		return nil, err
 	}
-	return &d, nil
+	return toDomainDriver(&d), nil
 }
 
-func (r *postgresRepository) CreateCar(ctx context.Context, driverID, carPlate, packageSlug string) (*db.CarModel, error) {
+func (r *postgresRepository) CreateCar(ctx context.Context, driverID, carPlate, packageSlug string) (*domain.Car, error) {
 	car := &db.CarModel{
 		ID:          uuid.New().String(),
 		DriverID:    driverID,
@@ -54,26 +81,30 @@ func (r *postgresRepository) CreateCar(ctx context.Context, driverID, carPlate, 
 	if err := r.db.WithContext(ctx).Create(car).Error; err != nil {
 		return nil, fmt.Errorf("failed to create car: %w", err)
 	}
-	return car, nil
+	return toDomainCar(car), nil
 }
 
-func (r *postgresRepository) ListCarsByDriverID(ctx context.Context, driverID string) ([]*db.CarModel, error) {
+func (r *postgresRepository) ListCarsByDriverID(ctx context.Context, driverID string) ([]*domain.Car, error) {
 	var cars []*db.CarModel
 	if err := r.db.WithContext(ctx).Where("driver_id = ?", driverID).Find(&cars).Error; err != nil {
 		return nil, fmt.Errorf("failed to list cars: %w", err)
 	}
-	return cars, nil
+	result := make([]*domain.Car, len(cars))
+	for i, c := range cars {
+		result[i] = toDomainCar(c)
+	}
+	return result, nil
 }
 
-func (r *postgresRepository) GetCarByID(ctx context.Context, carID string) (*db.CarModel, error) {
+func (r *postgresRepository) GetCarByID(ctx context.Context, carID string) (*domain.Car, error) {
 	var car db.CarModel
 	if err := r.db.WithContext(ctx).Where("id = ?", carID).First(&car).Error; err != nil {
 		return nil, err
 	}
-	return &car, nil
+	return toDomainCar(&car), nil
 }
 
-func (r *postgresRepository) RegisterDriver(ctx context.Context, userID, carID string, lat, lon float64) (*db.DriverModel, error) {
+func (r *postgresRepository) RegisterDriver(ctx context.Context, userID, carID string, lat, lon float64) (*domain.Driver, error) {
 	driver, err := r.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -119,7 +150,7 @@ func (r *postgresRepository) UnregisterDriver(ctx context.Context, userID string
 	return nil
 }
 
-func (r *postgresRepository) FindAvailableDrivers(ctx context.Context, packageType string) ([]*db.DriverModel, error) {
+func (r *postgresRepository) FindAvailableDrivers(ctx context.Context, packageType string) ([]*domain.Driver, error) {
 	var drivers []*db.DriverModel
 	if err := r.db.WithContext(ctx).
 		Preload("CurrentCar").
@@ -128,6 +159,9 @@ func (r *postgresRepository) FindAvailableDrivers(ctx context.Context, packageTy
 		Find(&drivers).Error; err != nil {
 		return nil, fmt.Errorf("failed to find available drivers: %w", err)
 	}
-	return drivers, nil
-
+	result := make([]*domain.Driver, len(drivers))
+	for i, d := range drivers {
+		result[i] = toDomainDriver(d)
+	}
+	return result, nil
 }
